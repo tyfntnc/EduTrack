@@ -1,0 +1,7 @@
+{
+  "name": "EduTrack Mobile - Eğitim ve Spor Yönetimi",
+  "description": "Okullar, antrenörler ve veliler için kapsamlı, modern ve minimalist eğitim programı ve yoklama takip platformu.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
