@@ -1,21 +1,25 @@
+
 {
-  "name": "edutrack-mobile---eğitim-ve-spor-yönetimi",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "name": "edutrack-mobile",
+  "version": "1.0.0",
+  "description": "EduTrack iOS ve Android Uygulaması",
+  "main": "index.js",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "start": "npx serve .",
+    "build": "echo 'Building web assets...'",
+    "cap-init": "npx cap init EduTrack com.edutrack.app --web-dir .",
+    "add-ios": "npx cap add ios",
+    "add-android": "npx cap add android",
+    "sync": "npx cap sync",
+    "open-ios": "npx cap open ios",
+    "open-android": "npx cap open android"
   },
   "dependencies": {
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3"
-  },
-  "devDependencies": {
-    "@types/node": "^22.14.0",
-    "@vitejs/plugin-react": "^5.0.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.0"
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
+    "@capacitor/camera": "^6.0.0",
+    "@capacitor/barcode-scanner": "^1.0.0"
   }
 }

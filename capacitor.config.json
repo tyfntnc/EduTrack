@@ -1,0 +1,13 @@
+
+{
+  "appId": "com.edutrack.app",
+  "appName": "EduTrack",
+  "webDir": ".",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "ios": {
+    "contentInset": "always"
+  }
+}

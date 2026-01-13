@@ -18,6 +18,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ userRole, userName, curren
   const [isGivenExpanded, setIsGivenExpanded] = useState(true);
   const [isTakenExpanded, setIsTakenExpanded] = useState(true);
   const [selectedCourseDetailId, setSelectedCourseDetailId] = useState<string | null>(null);
+  const [isMyQRModalOpen, setIsMyQRModalOpen] = useState(false);
 
   const today = new Date().getDay();
   
@@ -46,6 +47,49 @@ export const Dashboard: React.FC<DashboardProps> = ({ userRole, userName, curren
     setAttendanceCourseId(null);
     setAttendanceMode(null);
     setPresentIds([]);
+  };
+
+  const StudentQRModal = () => {
+    return (
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 animate-in fade-in duration-300">
+        <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-md" onClick={() => setIsMyQRModalOpen(false)} />
+        <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col items-center">
+          <button onClick={() => setIsMyQRModalOpen(false)} className="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+          
+          <div className="text-center space-y-2 mb-8">
+            <h3 className="text-xl font-black text-slate-900 tracking-tight">Yoklama QR Kodum</h3>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed px-4">
+              Ders başlangıcında bu kodu eğitmeninize okutarak yoklamanızı hızlıca tamamlayabilirsiniz.
+            </p>
+          </div>
+
+          <div className="p-4 bg-white border-4 border-indigo-50 rounded-[2.5rem] shadow-inner mb-8">
+            <div className="bg-slate-50 rounded-[2rem] p-6">
+              {/* Using a placeholder service for visual representation of the student's ID as QR */}
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${currentUserId}&bgcolor=f8fafc&color=4f46e5`} 
+                alt="My QR Code" 
+                className="w-40 h-40"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-indigo-50 px-5 py-3 rounded-2xl w-full border border-indigo-100">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <div className="text-left">
+               <p className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">ÖĞRENCİ KİMLİĞİ</p>
+               <p className="text-[11px] font-bold text-indigo-900">{userName}</p>
+            </div>
+          </div>
+
+          <button onClick={() => setIsMyQRModalOpen(false)} className="w-full mt-6 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all">Kapat</button>
+        </div>
+      </div>
+    );
   };
 
   const CourseDetailModal = ({ courseId, onClose }: { courseId: string, onClose: () => void }) => {
@@ -109,6 +153,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ userRole, userName, curren
   return (
     <div className="space-y-6 animate-in fade-in duration-700">
       {selectedCourseDetailId && <CourseDetailModal courseId={selectedCourseDetailId} onClose={() => setSelectedCourseDetailId(null)} />}
+      {isMyQRModalOpen && <StudentQRModal />}
       
       {/* Attendance Dialog (Hybrid QR/Manual) */}
       {attendanceCourseId && (
@@ -161,12 +206,29 @@ export const Dashboard: React.FC<DashboardProps> = ({ userRole, userName, curren
         </div>
       )}
 
-      <section>
-        <div className="flex items-center gap-2 mb-1">
-          <div className="h-[1px] w-6 bg-indigo-200" />
-          <p className="text-indigo-400 text-[9px] font-black uppercase tracking-widest leading-none">Bugün Ne Var?</p>
+      <section className="flex items-end justify-between">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="h-[1px] w-6 bg-indigo-200" />
+            <p className="text-indigo-400 text-[9px] font-black uppercase tracking-widest leading-none">Bugün Ne Var?</p>
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight leading-none">Selam, {userName.split(' ')[0]}</h2>
         </div>
-        <h2 className="text-2xl font-bold text-slate-900 tracking-tight leading-none">Selam, {userName.split(' ')[0]}</h2>
+        
+        {/* Only show QR button for Student role */}
+        {userRole === UserRole.STUDENT && (
+          <button 
+            onClick={() => setIsMyQRModalOpen(true)}
+            className="w-12 h-12 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center text-indigo-600 active:scale-90 transition-all hover:bg-indigo-50 hover:border-indigo-100 group"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-12 transition-transform">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+          </button>
+        )}
       </section>
 
       {/* 1. Verdiğim Eğitimler Portlet */}

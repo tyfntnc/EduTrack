@@ -15,8 +15,8 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
   
-  // Ahmet Yılmaz'ı seçiyoruz (Öğretmen ve listede öğrenci olarak da var)
-  const [currentUser, setCurrentUser] = useState<User>(MOCK_USERS[0]); 
+  // Başlangıç rolünü Mehmet Kaya (Öğrenci) olarak ayarlıyoruz
+  const [currentUser, setCurrentUser] = useState<User>(MOCK_USERS[1]); 
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -58,7 +58,7 @@ const App: React.FC = () => {
     >
       {renderContent()}
       
-      {/* Dev Toggle Helper */}
+      {/* Dev Toggle Helper - Sadece Adminler görebilir */}
       {isAdmin && activeTab === 'dashboard' && (
         <button 
           onClick={() => setActiveTab('admin')}
