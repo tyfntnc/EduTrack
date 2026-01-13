@@ -1,15 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { UserRole, Notification, User } from './types';
-import { Layout } from './components/Layout';
-import { Dashboard } from './pages/Dashboard';
-import { AdminPanel } from './pages/AdminPanel';
-import { Attendance } from './pages/Attendance';
-import { Notifications } from './pages/Notifications';
-import { Calendar } from './pages/Calendar';
-import { Other } from './pages/Other';
-import { Profile } from './pages/Profile';
-import { ApiService } from './services/api';
+import { UserRole, Notification, User } from './types.ts';
+import { Layout } from './components/Layout.tsx';
+import { Dashboard } from './pages/Dashboard.tsx';
+import { AdminPanel } from './pages/AdminPanel.tsx';
+import { Attendance } from './pages/Attendance.tsx';
+import { Notifications } from './pages/Notifications.tsx';
+import { Calendar } from './pages/Calendar.tsx';
+import { Other } from './pages/Other.tsx';
+import { Profile } from './pages/Profile.tsx';
+import { ApiService } from './services/api.ts';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -17,11 +17,9 @@ const App: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  // Uygulama başladığında verileri ApiService üzerinden yükle
   useEffect(() => {
     const initApp = async () => {
       try {
-        // Varsayılan olarak Mehmet Kaya (Öğrenci) kullanıcısını çekiyoruz
         const user = await ApiService.getCurrentUser('u2');
         const notifs = await ApiService.getNotifications();
         
@@ -30,7 +28,7 @@ const App: React.FC = () => {
       } catch (error) {
         console.error("Veri yükleme hatası:", error);
       } finally {
-        setTimeout(() => setIsLoading(false), 1000); // Yumuşak geçiş için kısa delay
+        setTimeout(() => setIsLoading(false), 500);
       }
     };
 

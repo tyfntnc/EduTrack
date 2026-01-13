@@ -1,5 +1,5 @@
 
-import { UserRole, Branch, Category, User, Course, Notification, NotificationType } from './types';
+import { UserRole, Branch, Category, User, Course, Notification, NotificationType } from './types.ts';
 
 export const INITIAL_BRANCHES: Branch[] = [
   { id: 'b1', name: 'Futbol' },
