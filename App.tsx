@@ -20,15 +20,17 @@ const App: React.FC = () => {
   useEffect(() => {
     const initApp = async () => {
       try {
+        // Mock veri çekme
         const user = await ApiService.getCurrentUser('u2');
         const notifs = await ApiService.getNotifications();
         
         setCurrentUser(user);
         setNotifications(notifs);
       } catch (error) {
-        console.error("Veri yükleme hatası:", error);
+        console.error("EduTrack: Veri yükleme hatası:", error);
       } finally {
-        setTimeout(() => setIsLoading(false), 500);
+        // Animasyon hissi için kısa bir gecikme
+        setTimeout(() => setIsLoading(false), 300);
       }
     };
 
@@ -38,24 +40,18 @@ const App: React.FC = () => {
   if (isLoading || !currentUser) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-white">
-        <div className="w-16 h-16 relative">
-          <div className="absolute inset-0 border-4 border-slate-100 rounded-2xl"></div>
-          <div className="absolute inset-0 border-4 border-indigo-600 rounded-2xl animate-spin border-t-transparent"></div>
+        <div className="w-12 h-12 relative">
+          <div className="absolute inset-0 border-4 border-slate-100 rounded-xl"></div>
+          <div className="absolute inset-0 border-4 border-indigo-600 rounded-xl animate-spin border-t-transparent"></div>
         </div>
-        <p className="mt-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] animate-pulse italic">
-          EduTrack Veriler Alınıyor...
+        <p className="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">
+          Sistem Hazırlanıyor...
         </p>
       </div>
     );
   }
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
-
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, isRead: true })));
-  };
-
-  const isAdmin = currentUser.role === UserRole.SYSTEM_ADMIN || currentUser.role === UserRole.SCHOOL_ADMIN;
 
   const renderContent = () => {
     switch (activeTab) {
@@ -64,7 +60,7 @@ const App: React.FC = () => {
       case 'courses':
         return <Attendance currentUser={currentUser} />;
       case 'notifications':
-        return <Notifications notifications={notifications} markAllAsRead={markAllAsRead} />;
+        return <Notifications notifications={notifications} markAllAsRead={() => setNotifications(notifications.map(n => ({ ...n, isRead: true })))} />;
       case 'calendar':
         return <Calendar currentUser={currentUser} />;
       case 'other':
@@ -77,6 +73,8 @@ const App: React.FC = () => {
         return <Dashboard userRole={currentUser.role} userName={currentUser.name} currentUserId={currentUser.id} />;
     }
   };
+
+  const isAdmin = currentUser.role === UserRole.SYSTEM_ADMIN || currentUser.role === UserRole.SCHOOL_ADMIN;
 
   return (
     <Layout 

@@ -16,41 +16,40 @@
             -webkit-tap-highlight-color: transparent;
             user-select: none;
             background-color: #f8fafc;
+            margin: 0;
+            padding: 0;
         }
-        /* Kaydırma çubuğunu gizle */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
         #root {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
+        /* Kaydırma çubuğunu gizle */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 
-    <!-- React ve Bağımlılıklar (Sadece v18.2.0 - Çakışma Giderildi) -->
+    <!-- React 18.2.0 - Kararlı Sürüm (Çakışmalar Giderildi) -->
     <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@18.2.0",
-        "react-dom": "https://esm.sh/react-dom@18.2.0",
-        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-        "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
-        "react-dom/": "https://esm.sh/react-dom@18.2.0/",
-        "react/": "https://esm.sh/react@18.2.0/"
-      }
-    }
-    </script>
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom": "https://esm.sh/react-dom@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
 
-    <!-- TSX Derleyici -->
+    <!-- TSX Derleyici (Babel Standalone) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body class="bg-slate-50 text-slate-900">
+<body class="bg-slate-50">
     <div id="root"></div>
 
     <!-- Uygulama Giriş Noktası -->
-    <script type="babel" data-type="module">
-        import './index.tsx';
-    </script>
+    <script type="text/babel" data-type="module" src="index.tsx"></script>
 </body>
 </html>
