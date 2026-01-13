@@ -161,40 +161,7 @@ export const Attendance: React.FC<AttendanceProps> = ({ currentUser }) => {
         />
       </div>
 
-      {/* 1. Verdiğim Eğitimler Portlet */}
-      <section className="bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-sm">
-        <button onClick={() => setIsGivenExpanded(!isGivenExpanded)} className="w-full flex items-center justify-between p-6 hover:bg-slate-50/50 transition-colors">
-          <div className="flex items-center gap-3">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900">Verdiğim Eğitimler</h3>
-            <span className="bg-indigo-50 text-indigo-500 text-[10px] font-black px-2 py-0.5 rounded-md">{coursesGiven.length}</span>
-          </div>
-          <svg className={`text-slate-300 transition-transform duration-300 ${isGivenExpanded ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-        </button>
-        {isGivenExpanded && (
-          <div className="p-4 pt-0 space-y-2 animate-in slide-in-from-top-2 duration-300">
-            {coursesGiven.slice(0, 5).map(c => (
-              <div 
-                key={c.id} 
-                onClick={() => setSelectedCourseId(c.id)}
-                className="bg-slate-50 border border-slate-100 p-4 rounded-2xl hover:bg-white hover:border-indigo-200 transition-all group cursor-pointer flex items-center gap-4"
-              >
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-bold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">{c.title}</h4>
-                  <div className="flex items-center gap-2 mt-1">
-                    <StudentAvatarsMinimal studentIds={c.studentIds} />
-                    <span className="text-[9px] font-black text-slate-400 uppercase">{c.studentIds.length} Öğrenci</span>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-1.5">
-                   <CompactWeeklyTracker course={c} />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* 2. Aldığım Eğitimler Portlet */}
+      {/* 1. Aldığım Eğitimler Portlet (PRIORITIZED) */}
       <section className="bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-sm">
         <button onClick={() => setIsTakenExpanded(!isTakenExpanded)} className="w-full flex items-center justify-between p-6 hover:bg-slate-50/50 transition-colors">
           <div className="flex items-center gap-3">
@@ -205,21 +172,62 @@ export const Attendance: React.FC<AttendanceProps> = ({ currentUser }) => {
         </button>
         {isTakenExpanded && (
           <div className="p-4 pt-0 space-y-2 animate-in slide-in-from-top-2 duration-300">
-            {coursesTaken.slice(0, 5).map(c => (
-              <div 
-                key={c.id} 
-                onClick={() => setSelectedCourseId(c.id)}
-                className="bg-slate-50 border border-slate-100 p-4 rounded-2xl hover:bg-white hover:border-emerald-200 transition-all group cursor-pointer flex items-center gap-4"
-              >
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-bold text-slate-900 truncate group-hover:text-emerald-600 transition-colors">{c.title}</h4>
-                  <p className="text-[9px] font-black text-slate-400 uppercase mt-1">Hoca: {MOCK_USERS.find(u => u.id === c.teacherId)?.name.split(' ')[0]}</p>
+            {coursesTaken.length === 0 ? (
+              <p className="text-center py-4 text-[10px] text-slate-400 font-bold uppercase italic">Kayıtlı dersiniz bulunmuyor.</p>
+            ) : (
+              coursesTaken.slice(0, 5).map(c => (
+                <div 
+                  key={c.id} 
+                  onClick={() => setSelectedCourseId(c.id)}
+                  className="bg-slate-50 border border-slate-100 p-4 rounded-2xl hover:bg-white hover:border-emerald-200 transition-all group cursor-pointer flex items-center gap-4"
+                >
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-bold text-slate-900 truncate group-hover:text-emerald-600 transition-colors">{c.title}</h4>
+                    <p className="text-[9px] font-black text-slate-400 uppercase mt-1">Hoca: {MOCK_USERS.find(u => u.id === c.teacherId)?.name.split(' ')[0]}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5">
+                     <CompactWeeklyTracker course={c} />
+                  </div>
                 </div>
-                <div className="flex flex-col items-end gap-1.5">
-                   <CompactWeeklyTracker course={c} />
+              ))
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* 2. Verdiğim Eğitimler Portlet */}
+      <section className="bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-sm">
+        <button onClick={() => setIsGivenExpanded(!isGivenExpanded)} className="w-full flex items-center justify-between p-6 hover:bg-slate-50/50 transition-colors">
+          <div className="flex items-center gap-3">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900">Verdiğim Eğitimler</h3>
+            <span className="bg-indigo-50 text-indigo-500 text-[10px] font-black px-2 py-0.5 rounded-md">{coursesGiven.length}</span>
+          </div>
+          <svg className={`text-slate-300 transition-transform duration-300 ${isGivenExpanded ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        {isGivenExpanded && (
+          <div className="p-4 pt-0 space-y-2 animate-in slide-in-from-top-2 duration-300">
+            {coursesGiven.length === 0 ? (
+              <p className="text-center py-4 text-[10px] text-slate-400 font-bold uppercase italic">Verdiğiniz ders bulunmuyor.</p>
+            ) : (
+              coursesGiven.slice(0, 5).map(c => (
+                <div 
+                  key={c.id} 
+                  onClick={() => setSelectedCourseId(c.id)}
+                  className="bg-slate-50 border border-slate-100 p-4 rounded-2xl hover:bg-white hover:border-indigo-200 transition-all group cursor-pointer flex items-center gap-4"
+                >
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-bold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">{c.title}</h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      <StudentAvatarsMinimal studentIds={c.studentIds} />
+                      <span className="text-[9px] font-black text-slate-400 uppercase">{c.studentIds.length} Öğrenci</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5">
+                     <CompactWeeklyTracker course={c} />
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         )}
       </section>
