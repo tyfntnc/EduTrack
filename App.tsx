@@ -22,43 +22,52 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
+  
+  // App States
   const [isLoading, setIsLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  const [showLanding, setShowLanding] = useState(() => {
+    // Eğer kullanıcı giriş yapmışsa Landing'i bir daha gösterme
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (isLoggedIn) return false;
+    return localStorage.getItem('hasSeenLanding') !== 'true';
+  });
+
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('isLoggedIn') === 'true';
   });
+
   const [authView, setAuthView] = useState<'login' | 'register' | 'forgot'>('login');
-  const [showLanding, setShowLanding] = useState(() => {
-    return localStorage.getItem('hasSeenLanding') !== 'true';
-  });
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [theme, setTheme] = useState<'lite' | 'dark'>(
     (localStorage.getItem('theme') as 'lite' | 'dark') || 'lite'
   );
 
+  // Initial Data Fetching
   useEffect(() => {
     const initApp = async () => {
-      try {
-        const user = await ApiService.getCurrentUser('u2');
-        const notifs = await ApiService.getNotifications();
-        
-        setCurrentUser(user);
-        setNotifications(notifs);
-      } catch (error) {
-        console.error("EduTrack: Veri yükleme hatası:", error);
-      } finally {
-        setTimeout(() => setIsLoading(false), 800);
+      if (isAuthenticated) {
+        try {
+          // Gerçek bir senaryoda burada token kontrolü yapılır
+          const user = await ApiService.getCurrentUser('u2');
+          const notifs = await ApiService.getNotifications();
+          setCurrentUser(user);
+          setNotifications(notifs);
+        } catch (error) {
+          console.error("EduTrack: Veri yükleme hatası:", error);
+          handleLogout(); // Hata durumunda güvenli çıkış
+        }
       }
+      // Yapay bir yükleme hissi için kısa gecikme
+      setTimeout(() => setIsLoading(false), 1200);
     };
 
-    if (isAuthenticated) {
-      initApp();
-    } else {
-      setTimeout(() => setIsLoading(false), 800);
-    }
+    initApp();
   }, [isAuthenticated]);
 
+  // Theme Watcher
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -67,6 +76,44 @@ const App: React.FC = () => {
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  const handleStartApp = () => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setShowLanding(false);
+      localStorage.setItem('hasSeenLanding', 'true');
+      setIsTransitioning(false);
+    }, 1000); // Karşılama ekranından sonra yükleme barı görünsün
+  };
+
+  const handleBackToLanding = () => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setShowLanding(true);
+      localStorage.removeItem('hasSeenLanding');
+      setIsTransitioning(false);
+    }, 800);
+  };
+
+  const handleLogin = (email: string) => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setIsAuthenticated(true);
+      localStorage.setItem('isLoggedIn', 'true');
+      setIsTransitioning(false);
+    }, 1200);
+  };
+
+  const handleLogout = () => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setIsAuthenticated(false);
+      localStorage.removeItem('isLoggedIn');
+      setActiveTab('dashboard');
+      setAuthView('login');
+      setIsTransitioning(false);
+    }, 800);
+  };
 
   const handleTabChange = (tab: string) => {
     if (tab === activeTab) return;
@@ -88,50 +135,50 @@ const App: React.FC = () => {
     }
   };
 
-  const handleStartApp = () => {
-    setShowLanding(false);
-    localStorage.setItem('hasSeenLanding', 'true');
-  };
-
-  const handleLogin = (email: string) => {
-    setIsAuthenticated(true);
-    localStorage.setItem('isLoggedIn', 'true');
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('isLoggedIn');
-    setActiveTab('dashboard');
-    setAuthView('login');
-  };
-
   const toggleTheme = () => {
     setTheme(prev => prev === 'lite' ? 'dark' : 'lite');
   };
 
-  if (showLanding) {
-    return <LandingPage onStart={handleStartApp} />;
+  // --- RENDERING LOGIC ---
+
+  // 1. Initial App Loading
+  if (isLoading) {
+    return <LoadingScreen />;
   }
 
-  if (!isAuthenticated) {
-    if (authView === 'register') {
-      return <Register onRegister={handleLogin} onBackToLogin={() => setAuthView('login')} />;
-    }
-    if (authView === 'forgot') {
-      return <ForgotPassword onBackToLogin={() => setAuthView('login')} />;
-    }
+  // 2. Landing Screen (First Time Only)
+  if (showLanding && !isAuthenticated) {
     return (
-      <Login 
-        onLogin={handleLogin} 
-        onRegisterClick={() => setAuthView('register')}
-        onForgotClick={() => setAuthView('forgot')}
-      />
+      <>
+        {isTransitioning && <LoadingScreen />}
+        <LandingPage onStart={handleStartApp} />
+      </>
     );
   }
 
-  if (isLoading || !currentUser) {
-    return <LoadingScreen />;
+  // 3. Authentication Screens
+  if (!isAuthenticated) {
+    return (
+      <>
+        {isTransitioning && <LoadingScreen />}
+        {authView === 'register' ? (
+          <Register onRegister={handleLogin} onBackToLogin={() => setAuthView('login')} />
+        ) : authView === 'forgot' ? (
+          <ForgotPassword onBackToLogin={() => setAuthView('login')} />
+        ) : (
+          <Login 
+            onLogin={handleLogin} 
+            onRegisterClick={() => setAuthView('register')}
+            onForgotClick={() => setAuthView('forgot')}
+            onBackToLanding={handleBackToLanding}
+          />
+        )}
+      </>
+    );
   }
+
+  // 4. Main Application
+  if (!currentUser) return <LoadingScreen />;
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -167,6 +214,7 @@ const App: React.FC = () => {
 
   return (
     <div className="relative">
+      {/* Tab ve Sayfa Geçişlerinde Görünen Loading Bar */}
       {isTransitioning && <LoadingScreen />}
       
       <Layout 
@@ -178,7 +226,9 @@ const App: React.FC = () => {
         unreadCount={unreadCount}
         theme={theme}
       >
-        {renderContent()}
+        <div className="page-transition">
+          {renderContent()}
+        </div>
         
         {isAdmin && activeTab === 'dashboard' && !viewingUser && (
           <button 

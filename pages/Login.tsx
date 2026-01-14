@@ -5,9 +5,10 @@ interface LoginProps {
   onLogin: (email: string) => void;
   onRegisterClick: () => void;
   onForgotClick: () => void;
+  onBackToLanding?: () => void;
 }
 
-export const Login: React.FC<LoginProps> = ({ onLogin, onRegisterClick, onForgotClick }) => {
+export const Login: React.FC<LoginProps> = ({ onLogin, onRegisterClick, onForgotClick, onBackToLanding }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -28,8 +29,19 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegisterClick, onForgot
       <div className="absolute top-0 left-0 w-full h-1/3 bg-indigo-600/5 dark:bg-indigo-500/10 rounded-b-[4rem] blur-3xl -z-10"></div>
       
       <header className="mt-12 mb-12 space-y-2">
-        <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-200 dark:shadow-none mb-6">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+        <div className="flex justify-between items-start">
+          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-200 dark:shadow-none mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+          </div>
+          {onBackToLanding && (
+            <button 
+              onClick={onBackToLanding}
+              className="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-slate-400 active:scale-90 transition-all"
+              title="Karşılama Ekranına Dön"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            </button>
+          )}
         </div>
         <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tighter">Tekrar Hoş Geldin!</h1>
         <p className="text-sm font-medium text-slate-400 dark:text-slate-500">Devam etmek için hesabına giriş yap.</p>
