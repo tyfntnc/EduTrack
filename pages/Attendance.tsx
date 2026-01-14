@@ -119,9 +119,18 @@ export const Attendance: React.FC<AttendanceProps> = ({ currentUser, onCourseCli
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{c.title}</h4>
-                    <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-0.5 uppercase tracking-tighter">
-                      {MOCK_USERS.find(u => u.id === c.teacherId)?.name}
-                    </p>
+                    <div className="flex flex-col gap-0.5 mt-0.5">
+                      <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-tighter">
+                        {MOCK_USERS.find(u => u.id === c.teacherId)?.name}
+                      </p>
+                      <div className="flex items-center gap-2 text-[9px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-tight">
+                        <span className="bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-100 dark:border-slate-700">{c.schoolId.toUpperCase()}</span>
+                        <div className="flex items-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                          <span className="truncate max-w-[80px]">{c.location || 'Kampüs'}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -157,9 +166,18 @@ export const Attendance: React.FC<AttendanceProps> = ({ currentUser, onCourseCli
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-100 truncate">{c.title}</h4>
-                    <p className="text-[10px] font-bold text-indigo-600/60 dark:text-indigo-400/60 mt-0.5 uppercase tracking-tighter">
-                      {c.studentIds.length} Kayıtlı Öğrenci
-                    </p>
+                    <div className="flex flex-col gap-0.5 mt-0.5">
+                      <p className="text-[10px] font-bold text-indigo-600/60 dark:text-indigo-400/60 uppercase tracking-tighter">
+                        {c.studentIds.length} Kayıtlı Öğrenci
+                      </p>
+                      <div className="flex items-center gap-2 text-[9px] font-medium text-indigo-900/40 dark:text-indigo-400/40 uppercase tracking-tight">
+                        <span className="bg-white/40 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded border border-indigo-100/20">{c.schoolId.toUpperCase()}</span>
+                        <div className="flex items-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                          <span className="truncate max-w-[80px]">{c.location || 'Kampüs'}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <div className="px-3 py-1.5 bg-indigo-600 text-white text-[9px] font-bold rounded-lg uppercase shadow-md shrink-0">
                     Yönet

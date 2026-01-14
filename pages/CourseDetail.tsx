@@ -92,7 +92,7 @@ export const CourseDetail: React.FC<CourseDetailProps> = ({ courseId, onBack, cu
   };
 
   return (
-    <div className="w-full page-transition px-4 space-y-5 pb-20 pt-4 transition-colors">
+    <div className="w-full page-transition px-4 space-y-5 pb-24 pt-4 transition-colors">
       <header className="flex items-center gap-4">
         <button 
           onClick={onBack}
@@ -106,31 +106,71 @@ export const CourseDetail: React.FC<CourseDetailProps> = ({ courseId, onBack, cu
         </div>
       </header>
 
-      <section 
-        onClick={() => teacher && onUserClick?.(teacher.id)}
-        className="bg-slate-900 dark:bg-indigo-600/20 rounded-[2.25rem] border dark:border-indigo-500/20 p-5 text-white shadow-xl shadow-slate-200 dark:shadow-none relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer"
-      >
-        <div className="relative z-10 flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-white/10 dark:bg-indigo-500/10 border border-white/20 dark:border-indigo-500/20 p-1 shrink-0 overflow-hidden transition-all">
-             <img src={teacher?.avatar} className="w-full h-full object-cover rounded-xl" alt={teacher?.name} />
+      {/* Course Info Cards */}
+      <section className="grid grid-cols-2 gap-3">
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-2">
+          <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           </div>
-          <div className="flex-1 min-w-0">
-             <p className="text-[9px] font-bold text-indigo-300 dark:text-indigo-300 uppercase tracking-[0.2em] mb-1">EĞİTMEN</p>
-             <h3 className="text-lg font-bold leading-none mb-3">{teacher?.name}</h3>
-             <div className="flex gap-2">
-                <button className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                </button>
-                <div className="w-[1px] h-4 bg-white/10 my-auto mx-1" />
-                <button className="p-2 bg-gradient-to-tr from-amber-400 to-rose-600 rounded-xl active:scale-90 transition-transform">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-                </button>
-             </div>
+          <div>
+            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Saat Aralığı</p>
+            <p className="text-[11px] font-bold text-slate-700 dark:text-slate-200">
+              {course.schedule[0].startTime} - {course.schedule[0].endTime}
+            </p>
           </div>
         </div>
-        <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/10 rounded-full blur-xl"></div>
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-2">
+          <div className="w-8 h-8 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          </div>
+          <div className="min-w-0">
+            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Eğitim Yeri</p>
+            <p className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">{course.location || 'Kampüs'}</p>
+          </div>
+        </div>
       </section>
 
+      {/* Instructor Notes */}
+      <section className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 p-5 rounded-[2.25rem] space-y-2 relative overflow-hidden">
+        <div className="flex items-center gap-2 relative z-10">
+          <span className="text-xl">📝</span>
+          <h3 className="text-[10px] font-black text-amber-800 dark:text-amber-400 uppercase tracking-widest">Eğitmen Notu</h3>
+        </div>
+        <p className="text-[12px] font-medium text-amber-900/80 dark:text-amber-300/80 leading-relaxed italic relative z-10">
+          "{course.instructorNotes || 'Bu ders için henüz bir eğitmen notu girilmemiş.'}"
+        </p>
+        <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-amber-200/20 dark:bg-amber-400/5 rounded-full blur-xl" />
+      </section>
+
+      {/* Instructor Detail */}
+      <section className="space-y-3">
+        <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest px-1">EĞİTMEN BİLGİLERİ</h3>
+        <div 
+          onClick={() => teacher && onUserClick?.(teacher.id)}
+          className="bg-slate-900 dark:bg-slate-900 rounded-[2.25rem] border border-slate-800 p-5 text-white shadow-xl relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer"
+        >
+          <div className="relative z-10 flex items-start gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-white/10 p-1 shrink-0 overflow-hidden">
+               <img src={teacher?.avatar} className="w-full h-full object-cover rounded-xl" alt={teacher?.name} />
+            </div>
+            <div className="flex-1 min-w-0 space-y-2">
+               <div>
+                 <h3 className="text-lg font-bold leading-none">{teacher?.name}</h3>
+                 <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1">{teacher?.role}</p>
+               </div>
+               <p className="text-[10px] text-slate-400 leading-relaxed line-clamp-2">
+                 {teacher?.bio || 'Bu eğitmen için biyografi bilgisi bulunmuyor.'}
+               </p>
+               <div className="flex gap-2">
+                  <div className="px-2 py-1 bg-white/5 rounded-lg text-[8px] font-black uppercase tracking-widest border border-white/10">Mesaj Gönder</div>
+                  <div className="px-2 py-1 bg-indigo-600 rounded-lg text-[8px] font-black uppercase tracking-widest">Profil</div>
+               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Classmates */}
       <section className="space-y-3">
         <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest flex items-center justify-between px-1">
           SINIF ARKADAŞLARIM <span>({classmates.length})</span>
@@ -142,38 +182,21 @@ export const CourseDetail: React.FC<CourseDetailProps> = ({ courseId, onBack, cu
               onClick={() => onUserClick?.(user.id)}
               className="flex flex-col items-center gap-2 shrink-0 active:scale-90 transition-transform cursor-pointer"
             >
-               <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-0.5 shadow-sm transition-all">
+               <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-0.5 shadow-sm">
                   <img src={user.avatar} className="w-full h-full object-cover rounded-[0.8rem]" alt={user.name} />
                </div>
                <span className="text-[9px] font-bold text-slate-500 dark:text-slate-500 text-center w-14 truncate">{user.name.split(' ')[0]}</span>
             </div>
           ))}
+          {classmates.length === 0 && (
+            <p className="text-[10px] text-slate-400 italic px-1">Sınıfta başka öğrenci bulunmuyor.</p>
+          )}
         </div>
       </section>
 
-      <section className="grid grid-cols-2 gap-3">
-        <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-[1.75rem] border border-indigo-100 dark:border-indigo-900/30 space-y-2 active:scale-95 transition-transform transition-all">
-           <div className="w-8 h-8 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm transition-colors">
-             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-           </div>
-           <div>
-             <h4 className="text-[11px] font-black text-indigo-900 dark:text-indigo-300 uppercase">Ödevler</h4>
-             <p className="text-[9px] text-indigo-600 dark:text-indigo-400 font-bold">2 Aktif Ödev</p>
-           </div>
-        </div>
-        <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-[1.75rem] border border-amber-100 dark:border-amber-900/30 space-y-2 active:scale-95 transition-transform transition-all">
-           <div className="w-8 h-8 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-sm transition-colors">
-             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-           </div>
-           <div>
-             <h4 className="text-[11px] font-black text-amber-900 dark:text-amber-300 uppercase">Duyurular</h4>
-             <p className="text-[9px] text-amber-600 dark:text-amber-400 font-bold">1 Yeni Duyuru</p>
-           </div>
-        </div>
-      </section>
-
+      {/* Attendance */}
       <section className="space-y-4">
-        <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest px-1">KATILIM TAKVİMİ</h3>
+        <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest px-1">KATILIM GEÇMİŞİM</h3>
         {renderAttendanceCalendar()}
       </section>
     </div>

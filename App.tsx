@@ -27,11 +27,8 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   
-  const [showLanding, setShowLanding] = useState(() => {
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    if (isLoggedIn) return false;
-    return localStorage.getItem('hasSeenLanding') !== 'true';
-  });
+  // Her açılışta Landing (Splash) gösterilmesi için state true olarak başlatıldı
+  const [showLanding, setShowLanding] = useState(true);
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('isLoggedIn') === 'true';
@@ -80,16 +77,14 @@ const App: React.FC = () => {
     setIsTransitioning(true);
     setTimeout(() => {
       setShowLanding(false);
-      localStorage.setItem('hasSeenLanding', 'true');
       setIsTransitioning(false);
-    }, 1000);
+    }, 800);
   };
 
   const handleBackToLanding = () => {
     setIsTransitioning(true);
     setTimeout(() => {
       setShowLanding(true);
-      localStorage.removeItem('hasSeenLanding');
       setIsTransitioning(false);
     }, 800);
   };
@@ -163,9 +158,39 @@ const App: React.FC = () => {
     setNotifications(prev => [notif, ...prev]);
   };
 
+  const markNotificationAsRead = (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+  };
+
+  // Rendering logic
   if (isLoading) return <LoadingScreen />;
-  if (showLanding && !isAuthenticated) return <><LandingPage onStart={handleStartApp} />{isTransitioning && <LoadingScreen />}</>;
-  if (!isAuthenticated) return <><Login onLogin={handleLogin} onRegisterClick={() => setAuthView('register')} onForgotClick={() => setAuthView('forgot')} onBackToLanding={handleBackToLanding} />{isTransitioning && <LoadingScreen />}</>;
+  
+  // Önce Splash Screen (LandingPage) gösterilir (4 saniye)
+  if (showLanding) {
+    return (
+      <>
+        <LandingPage onStart={handleStartApp} />
+        {isTransitioning && <LoadingScreen />}
+      </>
+    );
+  }
+
+  // Splash bittikten sonra login durumu kontrol edilir
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Login 
+          onLogin={handleLogin} 
+          onRegisterClick={() => setAuthView('register')} 
+          onForgotClick={() => setAuthView('forgot')} 
+          onBackToLanding={handleBackToLanding} 
+        />
+        {isTransitioning && <LoadingScreen />}
+      </>
+    );
+  }
+
+  // Ana uygulama içeriği
   if (!currentUser || !actingUserId) return <LoadingScreen />;
 
   const actingUser = MOCK_USERS.find(u => u.id === actingUserId) || currentUser;
@@ -175,6 +200,10 @@ const App: React.FC = () => {
   const renderContent = () => {
     if (viewingUser) {
       return <Profile user={viewingUser} onBack={() => setViewingUser(null)} isOwnProfile={viewingUser.id === currentUser.id} theme={theme} onThemeToggle={toggleTheme} onLogout={handleLogout} currentUser={currentUser} onSwitchUser={handleSwitchActingUser} actingUserId={actingUserId} />;
+    }
+
+    if (selectedCourseId) {
+      return <CourseDetail courseId={selectedCourseId} onBack={() => setSelectedCourseId(null)} currentUser={actingUser} onUserClick={handleUserClick} />;
     }
 
     switch (activeTab) {
@@ -190,21 +219,19 @@ const App: React.FC = () => {
           />
         );
       case 'courses':
-        if (selectedCourseId) {
-          return <CourseDetail courseId={selectedCourseId} onBack={() => setSelectedCourseId(null)} currentUser={actingUser} onUserClick={handleUserClick} />;
-        }
         return <Attendance currentUser={actingUser} onCourseClick={(id) => setSelectedCourseId(id)} />;
       case 'notifications':
         return (
           <Notifications 
             notifications={notifications} 
             markAllAsRead={() => setNotifications(notifications.map(n => ({ ...n, isRead: true })))} 
+            markAsRead={markNotificationAsRead}
             currentUser={currentUser} 
             addNotification={addNotification}
           />
         );
       case 'calendar':
-        return <Calendar currentUser={actingUser} />;
+        return <Calendar currentUser={actingUser} onCourseClick={(id) => setSelectedCourseId(id)} />;
       case 'other':
         return <Other />;
       case 'admin':
@@ -247,7 +274,7 @@ const App: React.FC = () => {
         theme={theme}
       >
         <div className={`page-transition ${isImpersonating ? 'mt-10' : ''}`}>{renderContent()}</div>
-        {isAdmin && activeTab === 'dashboard' && !viewingUser && (
+        {isAdmin && activeTab === 'dashboard' && !viewingUser && !selectedCourseId && (
           <button onClick={() => handleTabChange('admin')} className="fixed right-6 bottom-32 w-14 h-14 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl shadow-2xl flex items-center justify-center z-40 active:scale-90 transition-transform">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
           </button>

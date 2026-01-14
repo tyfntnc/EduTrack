@@ -1,11 +1,12 @@
 
 import React, { useState } from 'react';
 import { Notification, NotificationType, UserRole, User } from '../types';
-import { INITIAL_BRANCHES, INITIAL_CATEGORIES, MOCK_USERS } from '../constants';
+import { INITIAL_BRANCHES, INITIAL_CATEGORIES } from '../constants';
 
 interface NotificationsProps {
   notifications: Notification[];
   markAllAsRead: () => void;
+  markAsRead: (id: string) => void;
   currentUser: User;
   addNotification: (notif: Notification) => void;
 }
@@ -22,8 +23,15 @@ interface SavedAnnouncement {
   status: 'draft' | 'sent';
 }
 
-export const Notifications: React.FC<NotificationsProps> = ({ notifications, markAllAsRead, currentUser, addNotification }) => {
+export const Notifications: React.FC<NotificationsProps> = ({ 
+  notifications, 
+  markAllAsRead, 
+  markAsRead, 
+  currentUser, 
+  addNotification 
+}) => {
   const [viewMode, setViewMode] = useState<'inbox' | 'create' | 'manage'>('inbox');
+  const [selectedNotifId, setSelectedNotifId] = useState<string | null>(null);
   const [savedAnnouncements, setSavedAnnouncements] = useState<SavedAnnouncement[]>([]);
   
   // Form States
@@ -62,10 +70,8 @@ export const Notifications: React.FC<NotificationsProps> = ({ notifications, mar
   const handleSend = (id: string) => {
     const now = new Date().toISOString();
     
-    // 1. Duyuru durumunu güncelle
     setSavedAnnouncements(prev => prev.map(ann => {
       if (ann.id === id) {
-        // 2. Yeni bir bildirim olarak "Gelen" kutusuna ekle
         const newNotif: Notification = {
           id: `notif-${Date.now()}`,
           type: NotificationType.ANNOUNCEMENT,
@@ -76,12 +82,10 @@ export const Notifications: React.FC<NotificationsProps> = ({ notifications, mar
           senderRole: currentUser.role
         };
         addNotification(newNotif);
-
         return { ...ann, status: 'sent', sentAt: now };
       }
       return ann;
     }));
-
     alert("Duyuru yayınlandı ve tüm kullanıcılara gönderildi! ✅");
   };
 
@@ -95,6 +99,66 @@ export const Notifications: React.FC<NotificationsProps> = ({ notifications, mar
     }
   };
 
+  const handleNotifClick = (id: string) => {
+    markAsRead(id);
+    setSelectedNotifId(id);
+  };
+
+  const selectedNotif = notifications.find(n => n.id === selectedNotifId);
+
+  // DETAY GÖRÜNÜMÜ
+  if (selectedNotif && viewMode === 'inbox') {
+    return (
+      <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 px-4 pt-4 pb-24 transition-colors">
+        <header className="flex items-center gap-4">
+          <button 
+            onClick={() => setSelectedNotifId(null)}
+            className="w-10 h-10 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl flex items-center justify-center text-slate-400 dark:text-slate-600 active:scale-90 transition-all"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <div>
+            <h2 className="text-xl font-black text-slate-900 dark:text-slate-100 leading-none">Duyuru Detayı</h2>
+            <p className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mt-1">{selectedNotif.type}</p>
+          </div>
+        </header>
+
+        <section className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl space-y-6">
+          <div className="flex justify-center">
+             <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/30 rounded-[2rem] flex items-center justify-center text-4xl shadow-inner">
+               {getIcon(selectedNotif.type)}
+             </div>
+          </div>
+          
+          <div className="text-center space-y-2">
+            <h3 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 leading-tight">{selectedNotif.title}</h3>
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest">
+                {new Date(selectedNotif.timestamp).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })}
+              </span>
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase">
+                Saat: {new Date(selectedNotif.timestamp).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
+          </div>
+
+          <div className="w-full h-px bg-slate-50 dark:bg-slate-800"></div>
+
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed text-center px-2">
+            {selectedNotif.message}
+          </p>
+
+          <button 
+            onClick={() => setSelectedNotifId(null)}
+            className="w-full py-4 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all"
+          >
+            Anladım, Kapat
+          </button>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500 px-4 pt-4 transition-colors pb-24">
       
@@ -102,7 +166,7 @@ export const Notifications: React.FC<NotificationsProps> = ({ notifications, mar
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between px-1">
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-600">
-            {viewMode === 'inbox' ? `${notifications.length} DUYURU` : viewMode === 'create' ? 'YENİ DUYURU' : 'DUYURU YÖNETİMİ'}
+            {viewMode === 'inbox' ? `${notifications.length} DUYURULAR` : viewMode === 'create' ? 'YENİ DUYURU' : 'DUYURU YÖNETİMİ'}
           </span>
           {viewMode === 'inbox' && notifications.length > 0 && (
             <button 
@@ -117,19 +181,19 @@ export const Notifications: React.FC<NotificationsProps> = ({ notifications, mar
         {canManage && (
           <div className="flex gap-2 p-1.5 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
             <button 
-              onClick={() => setViewMode('inbox')}
+              onClick={() => { setViewMode('inbox'); setSelectedNotifId(null); }}
               className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-tighter transition-all ${viewMode === 'inbox' ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600' : 'text-slate-400'}`}
             >
               Gelen
             </button>
             <button 
-              onClick={() => setViewMode('create')}
+              onClick={() => { setViewMode('create'); setSelectedNotifId(null); }}
               className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-tighter transition-all ${viewMode === 'create' ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600' : 'text-slate-400'}`}
             >
               Oluştur
             </button>
             <button 
-              onClick={() => setViewMode('manage')}
+              onClick={() => { setViewMode('manage'); setSelectedNotifId(null); }}
               className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-tighter transition-all ${viewMode === 'manage' ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600' : 'text-slate-400'}`}
             >
               Yönet
@@ -152,9 +216,10 @@ export const Notifications: React.FC<NotificationsProps> = ({ notifications, mar
             </div>
           ) : (
             notifications.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).map(n => (
-              <div 
+              <button 
                 key={n.id} 
-                className={`group p-5 rounded-[2.25rem] border transition-all duration-300 flex gap-4 ${
+                onClick={() => handleNotifClick(n.id)}
+                className={`w-full text-left group p-5 rounded-[2.25rem] border transition-all duration-300 flex gap-4 active:scale-[0.98] ${
                   n.isRead 
                     ? 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800' 
                     : 'bg-white dark:bg-slate-900 border-indigo-200 dark:border-indigo-900/50 shadow-xl shadow-indigo-50 dark:shadow-none ring-1 ring-indigo-50 dark:ring-indigo-900/20'
@@ -165,18 +230,23 @@ export const Notifications: React.FC<NotificationsProps> = ({ notifications, mar
                 }`}>
                   {getIcon(n.type)}
                 </div>
-                <div className="flex-1 space-y-1">
+                <div className="flex-1 space-y-1 min-w-0">
                   <div className="flex justify-between items-start">
-                    <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm tracking-tight">{n.title}</h4>
-                    <span className="text-[9px] font-black text-slate-300 dark:text-slate-600 tracking-tighter">
+                    <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm tracking-tight truncate">{n.title}</h4>
+                    <span className="text-[8px] font-black text-slate-300 dark:text-slate-600 tracking-tighter shrink-0 ml-2">
                       {new Date(n.timestamp).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
-                  <p className={`text-[11px] leading-relaxed ${n.isRead ? 'text-slate-500 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400 font-medium'}`}>
+                  <p className={`text-[10px] leading-relaxed truncate ${n.isRead ? 'text-slate-500 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400 font-medium'}`}>
                     {n.message}
                   </p>
+                  <div className="flex items-center gap-1.5 pt-1">
+                    <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">
+                       {new Date(n.timestamp).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' })}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              </button>
             ))
           )
         )}
@@ -222,7 +292,7 @@ export const Notifications: React.FC<NotificationsProps> = ({ notifications, mar
                 <input 
                   type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="Örn: Hafta Sonu Antrenman İptali"
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20"
                 />
               </div>
 
@@ -231,7 +301,7 @@ export const Notifications: React.FC<NotificationsProps> = ({ notifications, mar
                 <textarea 
                   value={newContent} onChange={(e) => setNewContent(e.target.value)}
                   placeholder="Detayları buraya yazınız..." rows={4}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none"
                 />
               </div>
 

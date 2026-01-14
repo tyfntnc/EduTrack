@@ -5,9 +5,10 @@ import { User } from '../types';
 
 interface CalendarProps {
   currentUser: User;
+  onCourseClick: (courseId: string) => void;
 }
 
-export const Calendar: React.FC<CalendarProps> = ({ currentUser }) => {
+export const Calendar: React.FC<CalendarProps> = ({ currentUser, onCourseClick }) => {
   const [selectedDay, setSelectedDay] = useState(new Date().getDay());
   const today = new Date().getDay();
 
@@ -74,11 +75,15 @@ export const Calendar: React.FC<CalendarProps> = ({ currentUser }) => {
             <p className="text-[9px] font-bold text-slate-300 dark:text-slate-700 uppercase tracking-widest">Ders planlanmamış</p>
           </div>
         ) : (
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {activeClasses.map((cls, i) => {
               const isTrainer = cls.userRoleInCourse === 'EĞİTMEN';
               return (
-                <div key={i} className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 flex items-center gap-4 shadow-sm active:scale-[0.98] transition-all">
+                <button 
+                  key={i} 
+                  onClick={() => onCourseClick(cls.id)}
+                  className="w-full text-left bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 flex items-center gap-4 shadow-sm active:scale-[0.98] transition-all group"
+                >
                   <div className="flex flex-col items-center justify-center w-12 py-2.5 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shrink-0">
                     <span className="text-[10px] font-black text-slate-900 dark:text-slate-200 leading-none">{cls.startTime}</span>
                     <div className="w-3 h-[1px] bg-slate-200 dark:bg-slate-700 my-1.5"></div>
@@ -86,18 +91,27 @@ export const Calendar: React.FC<CalendarProps> = ({ currentUser }) => {
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate tracking-tight">{cls.title}</h4>
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate tracking-tight group-hover:text-indigo-600 transition-colors">{cls.title}</h4>
                     <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-0.5 uppercase tracking-tighter">
-                      {isTrainer ? cls.schoolId : MOCK_USERS.find(u => u.id === cls.teacherId)?.name.split(' ')[0]}
+                      {isTrainer ? 'Kurum: ' + cls.schoolId.toUpperCase() : 'Eğitmen: ' + MOCK_USERS.find(u => u.id === cls.teacherId)?.name.split(' ')[0]}
                     </p>
+                    <div className="flex items-center gap-1 mt-1 text-[9px] font-medium text-slate-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                      <span className="truncate">{cls.location || 'Konum Belirtilmedi'}</span>
+                    </div>
                   </div>
 
-                  <div className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-tighter shrink-0 ${
-                    isTrainer ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
-                  }`}>
-                    {cls.userRoleInCourse}
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <div className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-tighter ${
+                      isTrainer ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
+                    }`}>
+                      {cls.userRoleInCourse}
+                    </div>
+                    <div className="p-1 text-slate-300 group-hover:text-indigo-500 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>

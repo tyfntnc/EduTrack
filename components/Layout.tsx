@@ -46,10 +46,10 @@ const NavIcon = ({ id, active }: { id: string, active: boolean }) => {
 
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onProfileClick, userRole, userName, unreadCount, theme = 'lite' }) => {
   const tabs = [
-    { id: 'courses', label: 'Eğitimlerim' },
-    { id: 'calendar', label: 'Takvim' },
+    { id: 'courses', label: 'Kurslar' },
+    { id: 'calendar', label: 'Haftalık Program' },
     { id: 'dashboard', label: 'Ana Sayfa', center: true },
-    { id: 'notifications', label: 'Duyuru', badge: unreadCount > 0 },
+    { id: 'notifications', label: 'Duyurular', badge: unreadCount > 0 },
     { id: 'other', label: 'Analiz' },
   ];
 
@@ -68,7 +68,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         </button>
       </header>
 
-      <main className="flex-1 w-full bg-white dark:bg-slate-950 relative pb-32 transition-colors">
+      <main className="flex-1 w-full bg-white dark:bg-slate-950 relative pb-32 transition-colors overflow-y-auto no-scrollbar">
         {children}
       </main>
 
@@ -93,7 +93,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                   <div className="absolute top-2 right-1/4 w-2 h-2 bg-rose-500 rounded-full border border-white dark:border-slate-950"></div>
                 )}
               </div>
-              <span className={`text-[9px] font-bold tracking-tight ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-600 opacity-60'}`}>
+              <span className={`text-[8px] font-bold tracking-tight ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-600 opacity-60'}`}>
                 {tab.label}
               </span>
             </button>

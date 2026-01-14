@@ -34,6 +34,14 @@ export interface Category {
   name: string;
 }
 
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -43,7 +51,9 @@ export interface User {
   avatar?: string;
   branchIds?: string[];
   childIds?: string[];
-  parentIds?: string[]; // Ebeveynleri takip etmek için
+  parentIds?: string[];
+  bio?: string;
+  badges?: string[]; // Rozet ID'leri
 }
 
 export interface Course {
@@ -54,6 +64,8 @@ export interface Course {
   teacherId: string;
   studentIds: string[];
   title: string;
+  location?: string;
+  instructorNotes?: string;
   schedule: {
     day: number;
     startTime: string;
