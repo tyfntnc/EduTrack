@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { UserRole, Notification, User } from './types.ts';
+import { UserRole, Notification, User, NotificationType } from './types.ts';
 import { Layout } from './components/Layout.tsx';
 import { Dashboard } from './pages/Dashboard.tsx';
 import { AdminPanel } from './pages/AdminPanel.tsx';
@@ -40,7 +40,7 @@ const App: React.FC = () => {
   const [authView, setAuthView] = useState<'login' | 'register' | 'forgot'>('login');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [actingUserId, setActingUserId] = useState<string | null>(null); // Aktif işlem yapılan kimlik
+  const [actingUserId, setActingUserId] = useState<string | null>(null);
   const [theme, setTheme] = useState<'lite' | 'dark'>(
     (localStorage.getItem('theme') as 'lite' | 'dark') || 'lite'
   );
@@ -50,9 +50,8 @@ const App: React.FC = () => {
     const initApp = async () => {
       if (isAuthenticated) {
         try {
-          // Varsayılan olarak Ayşe (Veli) giriş yapmış gibi başlatalım testi daha iyi görmek için
-          // u3 = Ayşe Demir (Veli)
-          const user = await ApiService.getCurrentUser('u3'); 
+          // u4: Canan Sert - Okul Yöneticisi
+          const user = await ApiService.getCurrentUser('u4'); 
           const notifs = await ApiService.getNotifications();
           setCurrentUser(user);
           setActingUserId(user.id);
@@ -132,7 +131,7 @@ const App: React.FC = () => {
     setIsTransitioning(true);
     setTimeout(() => {
       setActingUserId(userId);
-      setActiveTab('dashboard'); // Kimlik değişince ana sayfaya atalım
+      setActiveTab('dashboard');
       setIsTransitioning(false);
       window.scrollTo(0, 0);
     }, 800);
@@ -147,6 +146,10 @@ const App: React.FC = () => {
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'lite' ? 'dark' : 'lite');
+  };
+
+  const addNotification = (notif: Notification) => {
+    setNotifications(prev => [notif, ...prev]);
   };
 
   if (isLoading) return <LoadingScreen />;
@@ -171,7 +174,14 @@ const App: React.FC = () => {
         }
         return <Attendance currentUser={actingUser} onCourseClick={(id) => setSelectedCourseId(id)} />;
       case 'notifications':
-        return <Notifications notifications={notifications} markAllAsRead={() => setNotifications(notifications.map(n => ({ ...n, isRead: true })))} />;
+        return (
+          <Notifications 
+            notifications={notifications} 
+            markAllAsRead={() => setNotifications(notifications.map(n => ({ ...n, isRead: true })))} 
+            currentUser={currentUser} 
+            addNotification={addNotification}
+          />
+        );
       case 'calendar':
         return <Calendar currentUser={actingUser} />;
       case 'other':
@@ -202,7 +212,7 @@ const App: React.FC = () => {
         <div className="page-transition">{renderContent()}</div>
         {isAdmin && activeTab === 'dashboard' && !viewingUser && (
           <button onClick={() => handleTabChange('admin')} className="fixed right-6 bottom-32 w-14 h-14 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl shadow-2xl flex items-center justify-center z-40 active:scale-90 transition-transform">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
           </button>
         )}
       </Layout>
