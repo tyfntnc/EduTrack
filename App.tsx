@@ -170,6 +170,7 @@ const App: React.FC = () => {
 
   const actingUser = MOCK_USERS.find(u => u.id === actingUserId) || currentUser;
   const unreadCount = notifications.filter(n => !n.isRead).length;
+  const isImpersonating = currentUser.id !== actingUserId;
 
   const renderContent = () => {
     if (viewingUser) {
@@ -178,7 +179,16 @@ const App: React.FC = () => {
 
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard userRole={actingUser.role} userName={actingUser.name} currentUserId={actingUser.id} />;
+        return (
+          <Dashboard 
+            userRole={actingUser.role} 
+            userName={actingUser.name} 
+            currentUserId={actingUser.id} 
+            isSystemAdmin={currentUser.role === UserRole.SYSTEM_ADMIN}
+            onImpersonate={handleSwitchActingUser}
+            onTabChange={setActiveTab}
+          />
+        );
       case 'courses':
         if (selectedCourseId) {
           return <CourseDetail courseId={selectedCourseId} onBack={() => setSelectedCourseId(null)} currentUser={actingUser} onUserClick={handleUserClick} />;
@@ -198,11 +208,11 @@ const App: React.FC = () => {
       case 'other':
         return <Other />;
       case 'admin':
-        return <AdminPanel currentUser={currentUser} />;
+        return <AdminPanel currentUser={currentUser} onImpersonate={handleSwitchActingUser} />;
       case 'profile':
         return <Profile user={currentUser} isOwnProfile={true} theme={theme} onThemeToggle={toggleTheme} onLogout={handleLogout} currentUser={currentUser} onSwitchUser={handleSwitchActingUser} actingUserId={actingUserId} />;
       default:
-        return <Dashboard userRole={actingUser.role} userName={actingUser.name} currentUserId={actingUser.id} />;
+        return <Dashboard userRole={actingUser.role} userName={actingUser.name} currentUserId={actingUser.id} isSystemAdmin={currentUser.role === UserRole.SYSTEM_ADMIN} onImpersonate={handleSwitchActingUser} onTabChange={setActiveTab} />;
     }
   };
 
@@ -211,6 +221,22 @@ const App: React.FC = () => {
   return (
     <div className="relative">
       {isTransitioning && <LoadingScreen />}
+      
+      {isImpersonating && (
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-indigo-600 text-white px-4 py-2 flex items-center justify-between shadow-lg animate-in slide-in-from-top duration-300">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            <span className="text-[10px] font-black uppercase tracking-widest">Gözlem Modu: {actingUser.name}</span>
+          </div>
+          <button 
+            onClick={() => handleSwitchActingUser(currentUser.id)}
+            className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-tight transition-colors"
+          >
+            Yöneticiye Dön
+          </button>
+        </div>
+      )}
+
       <Layout 
         activeTab={activeTab} 
         setActiveTab={handleTabChange} 
@@ -220,7 +246,7 @@ const App: React.FC = () => {
         unreadCount={unreadCount}
         theme={theme}
       >
-        <div className="page-transition">{renderContent()}</div>
+        <div className={`page-transition ${isImpersonating ? 'mt-10' : ''}`}>{renderContent()}</div>
         {isAdmin && activeTab === 'dashboard' && !viewingUser && (
           <button onClick={() => handleTabChange('admin')} className="fixed right-6 bottom-32 w-14 h-14 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl shadow-2xl flex items-center justify-center z-40 active:scale-90 transition-transform">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
