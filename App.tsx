@@ -48,10 +48,10 @@ const App: React.FC = () => {
   // Initial Data Fetching
   useEffect(() => {
     const initApp = async () => {
-      if (isAuthenticated) {
+      const savedUserEmail = localStorage.getItem('userEmail');
+      if (isAuthenticated && savedUserEmail) {
         try {
-          // u4: Canan Sert - Okul Yöneticisi
-          const user = await ApiService.getCurrentUser('u4'); 
+          const user = MOCK_USERS.find(u => u.email === savedUserEmail) || MOCK_USERS[0];
           const notifs = await ApiService.getNotifications();
           setCurrentUser(user);
           setActingUserId(user.id);
@@ -95,10 +95,19 @@ const App: React.FC = () => {
   };
 
   const handleLogin = (email: string) => {
+    const foundUser = MOCK_USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
+    
     setIsTransitioning(true);
     setTimeout(() => {
-      setIsAuthenticated(true);
-      localStorage.setItem('isLoggedIn', 'true');
+      if (foundUser) {
+        setIsAuthenticated(true);
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userEmail', foundUser.email);
+        setCurrentUser(foundUser);
+        setActingUserId(foundUser.id);
+      } else {
+        alert("Kullanıcı bulunamadı. Lütfen geçerli bir test e-postası girin.");
+      }
       setIsTransitioning(false);
     }, 1200);
   };
@@ -108,9 +117,11 @@ const App: React.FC = () => {
     setTimeout(() => {
       setIsAuthenticated(false);
       localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('userEmail');
       setActiveTab('dashboard');
       setAuthView('login');
       setActingUserId(null);
+      setCurrentUser(null);
       setIsTransitioning(false);
     }, 800);
   };
