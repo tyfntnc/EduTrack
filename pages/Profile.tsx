@@ -8,9 +8,10 @@ interface ProfileProps {
   isOwnProfile?: boolean;
   theme?: 'lite' | 'dark';
   onThemeToggle?: () => void;
+  onLogout?: () => void;
 }
 
-export const Profile: React.FC<ProfileProps> = ({ user, onBack, isOwnProfile = false, theme = 'lite', onThemeToggle }) => {
+export const Profile: React.FC<ProfileProps> = ({ user, onBack, isOwnProfile = false, theme = 'lite', onThemeToggle, onLogout }) => {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 px-4 transition-colors">
       {onBack && (
@@ -127,7 +128,10 @@ export const Profile: React.FC<ProfileProps> = ({ user, onBack, isOwnProfile = f
 
       {isOwnProfile && (
         <div className="px-2">
-          <button className="w-full py-5 rounded-[2.25rem] bg-rose-50 dark:bg-rose-900/10 text-rose-600 border border-rose-100 dark:border-rose-900/30 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-rose-500 hover:text-white transition-all active:scale-95 shadow-sm shadow-rose-100 dark:shadow-none">
+          <button 
+            onClick={onLogout}
+            className="w-full py-5 rounded-[2.25rem] bg-rose-50 dark:bg-rose-900/10 text-rose-600 border border-rose-100 dark:border-rose-900/30 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-rose-500 hover:text-white transition-all active:scale-95 shadow-sm shadow-rose-100 dark:shadow-none"
+          >
             Oturumu Güvenli Kapat
           </button>
           <p className="text-center text-[8px] text-slate-300 dark:text-slate-700 font-bold uppercase tracking-[0.3em] mt-6 italic">EduTrack Mobile v2.5.0</p>

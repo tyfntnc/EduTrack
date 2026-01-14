@@ -12,6 +12,9 @@ import { Profile } from './pages/Profile.tsx';
 import { CourseDetail } from './pages/CourseDetail.tsx';
 import { LandingPage } from './components/LandingPage.tsx';
 import { LoadingScreen } from './components/LoadingScreen.tsx';
+import { Login } from './pages/Login.tsx';
+import { Register } from './pages/Register.tsx';
+import { ForgotPassword } from './pages/ForgotPassword.tsx';
 import { ApiService } from './services/api.ts';
 import { MOCK_USERS } from './constants.tsx';
 
@@ -21,6 +24,10 @@ const App: React.FC = () => {
   const [viewingUser, setViewingUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('isLoggedIn') === 'true';
+  });
+  const [authView, setAuthView] = useState<'login' | 'register' | 'forgot'>('login');
   const [showLanding, setShowLanding] = useState(() => {
     return localStorage.getItem('hasSeenLanding') !== 'true';
   });
@@ -45,8 +52,12 @@ const App: React.FC = () => {
       }
     };
 
-    initApp();
-  }, []);
+    if (isAuthenticated) {
+      initApp();
+    } else {
+      setTimeout(() => setIsLoading(false), 800);
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -82,12 +93,40 @@ const App: React.FC = () => {
     localStorage.setItem('hasSeenLanding', 'true');
   };
 
+  const handleLogin = (email: string) => {
+    setIsAuthenticated(true);
+    localStorage.setItem('isLoggedIn', 'true');
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('isLoggedIn');
+    setActiveTab('dashboard');
+    setAuthView('login');
+  };
+
   const toggleTheme = () => {
     setTheme(prev => prev === 'lite' ? 'dark' : 'lite');
   };
 
   if (showLanding) {
     return <LandingPage onStart={handleStartApp} />;
+  }
+
+  if (!isAuthenticated) {
+    if (authView === 'register') {
+      return <Register onRegister={handleLogin} onBackToLogin={() => setAuthView('login')} />;
+    }
+    if (authView === 'forgot') {
+      return <ForgotPassword onBackToLogin={() => setAuthView('login')} />;
+    }
+    return (
+      <Login 
+        onLogin={handleLogin} 
+        onRegisterClick={() => setAuthView('register')}
+        onForgotClick={() => setAuthView('forgot')}
+      />
+    );
   }
 
   if (isLoading || !currentUser) {
@@ -98,7 +137,7 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     if (viewingUser) {
-      return <Profile user={viewingUser} onBack={() => setViewingUser(null)} isOwnProfile={viewingUser.id === currentUser.id} theme={theme} onThemeToggle={toggleTheme} />;
+      return <Profile user={viewingUser} onBack={() => setViewingUser(null)} isOwnProfile={viewingUser.id === currentUser.id} theme={theme} onThemeToggle={toggleTheme} onLogout={handleLogout} />;
     }
 
     switch (activeTab) {
@@ -118,7 +157,7 @@ const App: React.FC = () => {
       case 'admin':
         return <AdminPanel currentUser={currentUser} />;
       case 'profile':
-        return <Profile user={currentUser} isOwnProfile={true} theme={theme} onThemeToggle={toggleTheme} />;
+        return <Profile user={currentUser} isOwnProfile={true} theme={theme} onThemeToggle={toggleTheme} onLogout={handleLogout} />;
       default:
         return <Dashboard userRole={currentUser.role} userName={currentUser.name} currentUserId={currentUser.id} />;
     }
