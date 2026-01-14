@@ -39,15 +39,16 @@ export interface User {
   name: string;
   role: UserRole;
   email: string;
-  schoolId?: string; // Which school they belong to
+  schoolId?: string;
   avatar?: string;
   branchIds?: string[];
   childIds?: string[];
+  parentIds?: string[]; // Ebeveynleri takip etmek için
 }
 
 export interface Course {
   id: string;
-  schoolId: string; // Course owner school
+  schoolId: string;
   branchId: string;
   categoryId: string;
   teacherId: string;

@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { User } from '../types';
+import { User, UserRole } from '../types';
+import { MOCK_USERS } from '../constants';
 
 interface ProfileProps {
   user: User;
@@ -9,9 +10,29 @@ interface ProfileProps {
   theme?: 'lite' | 'dark';
   onThemeToggle?: () => void;
   onLogout?: () => void;
+  currentUser?: User;
+  onSwitchUser?: (userId: string) => void;
+  actingUserId?: string;
 }
 
-export const Profile: React.FC<ProfileProps> = ({ user, onBack, isOwnProfile = false, theme = 'lite', onThemeToggle, onLogout }) => {
+export const Profile: React.FC<ProfileProps> = ({ 
+  user, onBack, isOwnProfile = false, theme = 'lite', 
+  onThemeToggle, onLogout, currentUser, onSwitchUser, actingUserId 
+}) => {
+  
+  // Bağlantılı kullanıcıları bul (Eğer veliyse çocukları, öğrenciyse velileri)
+  const connectedUsers = MOCK_USERS.filter(u => {
+    if (user.role === UserRole.PARENT) {
+      return user.childIds?.includes(u.id);
+    }
+    if (user.role === UserRole.STUDENT) {
+      return user.parentIds?.includes(u.id);
+    }
+    return false;
+  });
+
+  const connectionLabel = user.role === UserRole.PARENT ? "ÇOCUKLARIM" : "VELİLERİM / AİLEM";
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 px-4 transition-colors">
       {onBack && (
@@ -42,7 +63,64 @@ export const Profile: React.FC<ProfileProps> = ({ user, onBack, isOwnProfile = f
         </div>
       </header>
 
-      {/* Theme Settings Section */}
+      {/* BAĞLANTILARIM BÖLÜMÜ */}
+      {isOwnProfile && connectedUsers.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <h3 className="text-[9px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.3em]">{connectionLabel}</h3>
+            {user.role === UserRole.PARENT && actingUserId !== user.id && (
+              <button 
+                onClick={() => onSwitchUser?.(user.id)}
+                className="text-[8px] font-black bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-1 rounded-lg uppercase"
+              >
+                Kendi Profilime Dön
+              </button>
+            )}
+          </div>
+          
+          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 px-1">
+            {/* Kendi Profilim (Sadece Veli ise ve Çocukları varsa profil değiştirebilmesi için ekleyelim) */}
+            {user.role === UserRole.PARENT && (
+              <button 
+                onClick={() => onSwitchUser?.(user.id)}
+                className={`flex flex-col items-center gap-2 shrink-0 transition-all ${actingUserId === user.id ? 'opacity-100' : 'opacity-40 hover:opacity-100'}`}
+              >
+                <div className={`w-16 h-16 rounded-2xl p-0.5 border-2 transition-all ${actingUserId === user.id ? 'border-indigo-600 scale-110 shadow-lg' : 'border-transparent'}`}>
+                  <img src={user.avatar} className="w-full h-full object-cover rounded-[0.8rem]" alt="Ben" />
+                </div>
+                <span className="text-[9px] font-black uppercase tracking-tighter dark:text-slate-400">BEN</span>
+              </button>
+            )}
+
+            {connectedUsers.map((connected) => (
+              <button 
+                key={connected.id} 
+                onClick={() => {
+                  // Eğer veliyse ve bir çocuğuna tıkladıysa uygulamayı o çocuğun kimliğine geçir
+                  if (user.role === UserRole.PARENT && onSwitchUser) {
+                    onSwitchUser(connected.id);
+                  }
+                }}
+                className={`flex flex-col items-center gap-2 shrink-0 transition-all ${actingUserId === connected.id ? 'opacity-100' : 'opacity-50 hover:opacity-100'}`}
+              >
+                <div className={`w-16 h-16 rounded-2xl p-0.5 border-2 transition-all relative ${actingUserId === connected.id ? 'border-indigo-600 scale-110 shadow-lg' : 'border-transparent'}`}>
+                  <img src={connected.avatar} className="w-full h-full object-cover rounded-[0.8rem]" alt={connected.name} />
+                  {actingUserId === connected.id && (
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-indigo-600 rounded-full flex items-center justify-center text-white border-2 border-white dark:border-slate-900">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                  )}
+                </div>
+                <span className="text-[9px] font-bold text-slate-500 dark:text-slate-500 text-center w-16 truncate">{connected.name.split(' ')[0]}</span>
+              </button>
+            ))}
+          </div>
+          {user.role === UserRole.PARENT && (
+             <p className="text-[8px] font-medium text-slate-400 dark:text-slate-600 text-center uppercase tracking-widest italic">İşlem yapmak istediğiniz profili seçin</p>
+          )}
+        </section>
+      )}
+
       {isOwnProfile && (
         <section className="space-y-4">
           <h3 className="text-[9px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.3em] ml-2">Görünüm Ayarları</h3>

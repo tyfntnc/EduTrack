@@ -28,7 +28,6 @@ const App: React.FC = () => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   
   const [showLanding, setShowLanding] = useState(() => {
-    // Eğer kullanıcı giriş yapmışsa Landing'i bir daha gösterme
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     if (isLoggedIn) return false;
     return localStorage.getItem('hasSeenLanding') !== 'true';
@@ -41,6 +40,7 @@ const App: React.FC = () => {
   const [authView, setAuthView] = useState<'login' | 'register' | 'forgot'>('login');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [actingUserId, setActingUserId] = useState<string | null>(null); // Aktif işlem yapılan kimlik
   const [theme, setTheme] = useState<'lite' | 'dark'>(
     (localStorage.getItem('theme') as 'lite' | 'dark') || 'lite'
   );
@@ -50,24 +50,24 @@ const App: React.FC = () => {
     const initApp = async () => {
       if (isAuthenticated) {
         try {
-          // Gerçek bir senaryoda burada token kontrolü yapılır
-          const user = await ApiService.getCurrentUser('u2');
+          // Varsayılan olarak Ayşe (Veli) giriş yapmış gibi başlatalım testi daha iyi görmek için
+          // u3 = Ayşe Demir (Veli)
+          const user = await ApiService.getCurrentUser('u3'); 
           const notifs = await ApiService.getNotifications();
           setCurrentUser(user);
+          setActingUserId(user.id);
           setNotifications(notifs);
         } catch (error) {
           console.error("EduTrack: Veri yükleme hatası:", error);
-          handleLogout(); // Hata durumunda güvenli çıkış
+          handleLogout();
         }
       }
-      // Yapay bir yükleme hissi için kısa gecikme
       setTimeout(() => setIsLoading(false), 1200);
     };
 
     initApp();
   }, [isAuthenticated]);
 
-  // Theme Watcher
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -83,7 +83,7 @@ const App: React.FC = () => {
       setShowLanding(false);
       localStorage.setItem('hasSeenLanding', 'true');
       setIsTransitioning(false);
-    }, 1000); // Karşılama ekranından sonra yükleme barı görünsün
+    }, 1000);
   };
 
   const handleBackToLanding = () => {
@@ -111,13 +111,13 @@ const App: React.FC = () => {
       localStorage.removeItem('isLoggedIn');
       setActiveTab('dashboard');
       setAuthView('login');
+      setActingUserId(null);
       setIsTransitioning(false);
     }, 800);
   };
 
   const handleTabChange = (tab: string) => {
     if (tab === activeTab) return;
-    
     setIsTransitioning(true);
     setTimeout(() => {
       setActiveTab(tab);
@@ -126,6 +126,16 @@ const App: React.FC = () => {
       setIsTransitioning(false);
       window.scrollTo(0, 0);
     }, 600);
+  };
+
+  const handleSwitchActingUser = (userId: string) => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setActingUserId(userId);
+      setActiveTab('dashboard'); // Kimlik değişince ana sayfaya atalım
+      setIsTransitioning(false);
+      window.scrollTo(0, 0);
+    }, 800);
   };
 
   const handleUserClick = (userId: string) => {
@@ -139,74 +149,39 @@ const App: React.FC = () => {
     setTheme(prev => prev === 'lite' ? 'dark' : 'lite');
   };
 
-  // --- RENDERING LOGIC ---
+  if (isLoading) return <LoadingScreen />;
+  if (showLanding && !isAuthenticated) return <><LandingPage onStart={handleStartApp} />{isTransitioning && <LoadingScreen />}</>;
+  if (!isAuthenticated) return <><Login onLogin={handleLogin} onRegisterClick={() => setAuthView('register')} onForgotClick={() => setAuthView('forgot')} onBackToLanding={handleBackToLanding} />{isTransitioning && <LoadingScreen />}</>;
+  if (!currentUser || !actingUserId) return <LoadingScreen />;
 
-  // 1. Initial App Loading
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
-
-  // 2. Landing Screen (First Time Only)
-  if (showLanding && !isAuthenticated) {
-    return (
-      <>
-        {isTransitioning && <LoadingScreen />}
-        <LandingPage onStart={handleStartApp} />
-      </>
-    );
-  }
-
-  // 3. Authentication Screens
-  if (!isAuthenticated) {
-    return (
-      <>
-        {isTransitioning && <LoadingScreen />}
-        {authView === 'register' ? (
-          <Register onRegister={handleLogin} onBackToLogin={() => setAuthView('login')} />
-        ) : authView === 'forgot' ? (
-          <ForgotPassword onBackToLogin={() => setAuthView('login')} />
-        ) : (
-          <Login 
-            onLogin={handleLogin} 
-            onRegisterClick={() => setAuthView('register')}
-            onForgotClick={() => setAuthView('forgot')}
-            onBackToLanding={handleBackToLanding}
-          />
-        )}
-      </>
-    );
-  }
-
-  // 4. Main Application
-  if (!currentUser) return <LoadingScreen />;
-
+  const actingUser = MOCK_USERS.find(u => u.id === actingUserId) || currentUser;
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const renderContent = () => {
     if (viewingUser) {
-      return <Profile user={viewingUser} onBack={() => setViewingUser(null)} isOwnProfile={viewingUser.id === currentUser.id} theme={theme} onThemeToggle={toggleTheme} onLogout={handleLogout} />;
+      return <Profile user={viewingUser} onBack={() => setViewingUser(null)} isOwnProfile={viewingUser.id === currentUser.id} theme={theme} onThemeToggle={toggleTheme} onLogout={handleLogout} currentUser={currentUser} onSwitchUser={handleSwitchActingUser} actingUserId={actingUserId} />;
     }
 
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard userRole={currentUser.role} userName={currentUser.name} currentUserId={currentUser.id} />;
+        return <Dashboard userRole={actingUser.role} userName={actingUser.name} currentUserId={actingUser.id} />;
       case 'courses':
         if (selectedCourseId) {
-          return <CourseDetail courseId={selectedCourseId} onBack={() => setSelectedCourseId(null)} currentUser={currentUser} onUserClick={handleUserClick} />;
+          return <CourseDetail courseId={selectedCourseId} onBack={() => setSelectedCourseId(null)} currentUser={actingUser} onUserClick={handleUserClick} />;
         }
-        return <Attendance currentUser={currentUser} onCourseClick={(id) => setSelectedCourseId(id)} />;
+        return <Attendance currentUser={actingUser} onCourseClick={(id) => setSelectedCourseId(id)} />;
       case 'notifications':
         return <Notifications notifications={notifications} markAllAsRead={() => setNotifications(notifications.map(n => ({ ...n, isRead: true })))} />;
       case 'calendar':
-        return <Calendar currentUser={currentUser} />;
+        return <Calendar currentUser={actingUser} />;
       case 'other':
         return <Other />;
       case 'admin':
         return <AdminPanel currentUser={currentUser} />;
       case 'profile':
-        return <Profile user={currentUser} isOwnProfile={true} theme={theme} onThemeToggle={toggleTheme} onLogout={handleLogout} />;
+        return <Profile user={currentUser} isOwnProfile={true} theme={theme} onThemeToggle={toggleTheme} onLogout={handleLogout} currentUser={currentUser} onSwitchUser={handleSwitchActingUser} actingUserId={actingUserId} />;
       default:
-        return <Dashboard userRole={currentUser.role} userName={currentUser.name} currentUserId={currentUser.id} />;
+        return <Dashboard userRole={actingUser.role} userName={actingUser.name} currentUserId={actingUser.id} />;
     }
   };
 
@@ -214,31 +189,20 @@ const App: React.FC = () => {
 
   return (
     <div className="relative">
-      {/* Tab ve Sayfa Geçişlerinde Görünen Loading Bar */}
       {isTransitioning && <LoadingScreen />}
-      
       <Layout 
         activeTab={activeTab} 
         setActiveTab={handleTabChange} 
         onProfileClick={() => { handleTabChange('profile'); }}
         userRole={currentUser.role}
-        userName={currentUser.name}
+        userName={actingUser.name}
         unreadCount={unreadCount}
         theme={theme}
       >
-        <div className="page-transition">
-          {renderContent()}
-        </div>
-        
+        <div className="page-transition">{renderContent()}</div>
         {isAdmin && activeTab === 'dashboard' && !viewingUser && (
-          <button 
-            onClick={() => handleTabChange('admin')}
-            className="fixed right-6 bottom-32 w-14 h-14 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl shadow-2xl flex items-center justify-center z-40 active:scale-90 transition-transform"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
+          <button onClick={() => handleTabChange('admin')} className="fixed right-6 bottom-32 w-14 h-14 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl shadow-2xl flex items-center justify-center z-40 active:scale-90 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
           </button>
         )}
       </Layout>

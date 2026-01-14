@@ -18,14 +18,14 @@ export const INITIAL_CATEGORIES: Category[] = [
 
 export const MOCK_USERS: User[] = [
   { id: 'u1', name: 'Ahmet Yılmaz', role: UserRole.TEACHER, email: 'ahmet@okul-a.com', schoolId: 'school-a', avatar: 'https://picsum.photos/seed/u1/200' },
-  { id: 'u2', name: 'Mehmet Kaya', role: UserRole.STUDENT, email: 'mehmet@okul-a.com', schoolId: 'school-a', avatar: 'https://picsum.photos/seed/u2/200' },
-  { id: 'u3', name: 'Ayşe Demir', role: UserRole.PARENT, email: 'ayse@veli.com', avatar: 'https://picsum.photos/seed/u3/200', childIds: ['u2'] },
+  { id: 'u2', name: 'Mehmet Kaya', role: UserRole.STUDENT, email: 'mehmet@okul-a.com', schoolId: 'school-a', avatar: 'https://picsum.photos/seed/u2/200', parentIds: ['u3'] },
+  { id: 'u3', name: 'Ayşe Demir', role: UserRole.PARENT, email: 'ayse@veli.com', avatar: 'https://picsum.photos/seed/u3/200', childIds: ['u2', 'u9'] },
   { id: 'u4', name: 'Canan Sert', role: UserRole.SCHOOL_ADMIN, email: 'canan@okul-a.com', schoolId: 'school-a', avatar: 'https://picsum.photos/seed/u4/200' },
   { id: 'u5', name: 'Bülent Arın', role: UserRole.SCHOOL_ADMIN, email: 'bulent@okul-b.com', schoolId: 'school-b', avatar: 'https://picsum.photos/seed/u5/200' },
   { id: 'admin', name: 'Zeynep Sistem', role: UserRole.SYSTEM_ADMIN, email: 'admin@system.com', avatar: 'https://picsum.photos/seed/admin/200' },
   { id: 'u7', name: 'Fatma Şahin', role: UserRole.TEACHER, email: 'fatma@okul-a.com', schoolId: 'school-a', avatar: 'https://picsum.photos/seed/u7/200' },
   { id: 'u8', name: 'Murat Can', role: UserRole.TEACHER, email: 'murat@okul-a.com', schoolId: 'school-a', avatar: 'https://picsum.photos/seed/u8/200' },
-  { id: 'u9', name: 'Ali Vural', role: UserRole.STUDENT, email: 'ali@okul-a.com', schoolId: 'school-a', avatar: 'https://picsum.photos/seed/u9/200' },
+  { id: 'u9', name: 'Ali Vural', role: UserRole.STUDENT, email: 'ali@okul-a.com', schoolId: 'school-a', avatar: 'https://picsum.photos/seed/u9/200', parentIds: ['u3'] },
   { id: 'u10', name: 'Buse Aydın', role: UserRole.STUDENT, email: 'buse@okul-a.com', schoolId: 'school-a', avatar: 'https://picsum.photos/seed/u10/200' },
   { id: 'u11', name: 'Caner Öz', role: UserRole.STUDENT, email: 'caner@okul-a.com', schoolId: 'school-a', avatar: 'https://picsum.photos/seed/u11/200' },
   { id: 'u12', name: 'Deniz Aktaş', role: UserRole.STUDENT, email: 'deniz@okul-a.com', schoolId: 'school-a', avatar: 'https://picsum.photos/seed/u12/200' },
