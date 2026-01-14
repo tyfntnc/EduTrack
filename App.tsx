@@ -20,6 +20,9 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [theme, setTheme] = useState<'lite' | 'dark'>(
+    (localStorage.getItem('theme') as 'lite' | 'dark') || 'lite'
+  );
 
   useEffect(() => {
     const initApp = async () => {
@@ -39,6 +42,16 @@ const App: React.FC = () => {
     initApp();
   }, []);
 
+  // Tema değişikliğini kök elemente uygula
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     setSelectedCourseId(null);
@@ -52,14 +65,18 @@ const App: React.FC = () => {
     }
   };
 
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'lite' ? 'dark' : 'lite');
+  };
+
   if (isLoading || !currentUser) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-slate-950">
         <div className="w-12 h-12 relative">
-          <div className="absolute inset-0 border-4 border-slate-100 rounded-xl"></div>
+          <div className="absolute inset-0 border-4 border-slate-100 dark:border-slate-800 rounded-xl"></div>
           <div className="absolute inset-0 border-4 border-indigo-600 rounded-xl animate-spin border-t-transparent"></div>
         </div>
-        <p className="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">
+        <p className="mt-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] animate-pulse">
           Sistem Hazırlanıyor...
         </p>
       </div>
@@ -70,7 +87,7 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     if (viewingUser) {
-      return <Profile user={viewingUser} onBack={() => setViewingUser(null)} isOwnProfile={viewingUser.id === currentUser.id} />;
+      return <Profile user={viewingUser} onBack={() => setViewingUser(null)} isOwnProfile={viewingUser.id === currentUser.id} theme={theme} onThemeToggle={toggleTheme} />;
     }
 
     switch (activeTab) {
@@ -90,7 +107,7 @@ const App: React.FC = () => {
       case 'admin':
         return <AdminPanel currentUser={currentUser} />;
       case 'profile':
-        return <Profile user={currentUser} isOwnProfile={true} />;
+        return <Profile user={currentUser} isOwnProfile={true} theme={theme} onThemeToggle={toggleTheme} />;
       default:
         return <Dashboard userRole={currentUser.role} userName={currentUser.name} currentUserId={currentUser.id} />;
     }
@@ -106,13 +123,14 @@ const App: React.FC = () => {
       userRole={currentUser.role}
       userName={currentUser.name}
       unreadCount={unreadCount}
+      theme={theme}
     >
       {renderContent()}
       
       {isAdmin && activeTab === 'dashboard' && !viewingUser && (
         <button 
           onClick={() => setActiveTab('admin')}
-          className="fixed right-6 bottom-32 w-14 h-14 bg-slate-900 text-white rounded-2xl shadow-2xl flex items-center justify-center z-40 active:scale-90 transition-transform"
+          className="fixed right-6 bottom-32 w-14 h-14 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl shadow-2xl flex items-center justify-center z-40 active:scale-90 transition-transform"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
