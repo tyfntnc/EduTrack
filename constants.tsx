@@ -40,7 +40,7 @@ export const MOCK_COURSES: Course[] = [
     schedule: [{ day: today, startTime: '16:00', endTime: '18:00' }, { day: 1, startTime: '16:00', endTime: '18:00' }]
   },
   {
-    id: 'crs2', schoolId: 'school-a', branchId: 'b3', categoryId: 'c3', teacherId: 'u7', studentIds: ['u1', 'u9', 'u10'], title: 'Matematik İleri Seviye',
+    id: 'crs2', schoolId: 'school-a', branchId: 'b3', categoryId: 'c3', teacherId: 'u7', studentIds: ['u2', 'u9', 'u10'], title: 'Matematik İleri Seviye',
     schedule: [{ day: today, startTime: '18:30', endTime: '20:00' }, { day: 2, startTime: '18:30', endTime: '20:00' }]
   },
   {
@@ -56,24 +56,44 @@ export const MOCK_COURSES: Course[] = [
     schedule: [{ day: today, startTime: '08:00', endTime: '09:30' }, { day: 6, startTime: '09:00', endTime: '10:30' }]
   },
   {
-    id: 'crs6', schoolId: 'school-a', branchId: 'b1', categoryId: 'c1', teacherId: 'u1', studentIds: ['u9', 'u10'], title: 'Futbol Taktik Analiz',
+    id: 'crs6', schoolId: 'school-a', branchId: 'b1', categoryId: 'c1', teacherId: 'u1', studentIds: ['u2', 'u10'], title: 'Futbol Taktik Analiz',
     schedule: [{ day: 1, startTime: '10:00', endTime: '12:00' }]
   },
   {
-    id: 'crs7', schoolId: 'school-a', branchId: 'b3', categoryId: 'c3', teacherId: 'u8', studentIds: ['u1', 'u11'], title: 'Eğitim Psikolojisi',
+    id: 'crs7', schoolId: 'school-a', branchId: 'b3', categoryId: 'c3', teacherId: 'u8', studentIds: ['u2', 'u11'], title: 'Eğitim Psikolojisi',
     schedule: [{ day: today, startTime: '20:00', endTime: '21:30' }]
   },
   {
-    id: 'crs8', schoolId: 'school-a', branchId: 'b2', categoryId: 'c2', teacherId: 'u8', studentIds: ['u1', 'u12'], title: 'Liderlik Eğitimi',
+    id: 'crs8', schoolId: 'school-a', branchId: 'b2', categoryId: 'c2', teacherId: 'u8', studentIds: ['u2', 'u12'], title: 'Liderlik Eğitimi',
     schedule: [{ day: today, startTime: '11:00', endTime: '12:30' }]
   },
   {
-    id: 'crs9', schoolId: 'school-a', branchId: 'b4', categoryId: 'c1', teacherId: 'u7', studentIds: ['u1', 'u13'], title: 'Sporcu Beslenmesi',
+    id: 'crs9', schoolId: 'school-a', branchId: 'b4', categoryId: 'c1', teacherId: 'u7', studentIds: ['u2', 'u13'], title: 'Sporcu Beslenmesi',
     schedule: [{ day: today, startTime: '13:00', endTime: '14:30' }]
   },
   {
-    id: 'crs10', schoolId: 'school-a', branchId: 'b5', categoryId: 'c4', teacherId: 'u8', studentIds: ['u1', 'u2'], title: 'İlkyardım Sertifikası',
+    id: 'crs10', schoolId: 'school-a', branchId: 'b5', categoryId: 'c4', teacherId: 'u8', studentIds: ['u2', 'u9'], title: 'İlkyardım Sertifikası',
     schedule: [{ day: today, startTime: '15:00', endTime: '16:30' }]
+  },
+  {
+    id: 'crs11', schoolId: 'school-a', branchId: 'b1', categoryId: 'c1', teacherId: 'u1', studentIds: ['u2'], title: 'Kaleci Antrenmanı',
+    schedule: [{ day: 3, startTime: '17:00', endTime: '18:30' }]
+  },
+  {
+    id: 'crs12', schoolId: 'school-a', branchId: 'b2', categoryId: 'c2', teacherId: 'u7', studentIds: ['u2'], title: 'Basketbol Şut Teknikleri',
+    schedule: [{ day: 4, startTime: '16:00', endTime: '17:30' }]
+  },
+  {
+    id: 'crs13', schoolId: 'school-a', branchId: 'b3', categoryId: 'c3', teacherId: 'u8', studentIds: ['u2'], title: 'Hızlı Okuma Teknikleri',
+    schedule: [{ day: 5, startTime: '09:00', endTime: '10:30' }]
+  },
+  {
+    id: 'crs14', schoolId: 'school-a', branchId: 'b4', categoryId: 'c4', teacherId: 'u1', studentIds: ['u2'], title: 'Voleybol Smaç Kampı',
+    schedule: [{ day: 2, startTime: '14:00', endTime: '16:00' }]
+  },
+  {
+    id: 'crs15', schoolId: 'school-a', branchId: 'b5', categoryId: 'c1', teacherId: 'u7', studentIds: ['u2'], title: 'Serbest Stil Yüzme',
+    schedule: [{ day: 1, startTime: '07:00', endTime: '08:30' }]
   }
 ];
 

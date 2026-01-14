@@ -9,10 +9,14 @@ import { Notifications } from './pages/Notifications.tsx';
 import { Calendar } from './pages/Calendar.tsx';
 import { Other } from './pages/Other.tsx';
 import { Profile } from './pages/Profile.tsx';
+import { CourseDetail } from './pages/CourseDetail.tsx';
 import { ApiService } from './services/api.ts';
+import { MOCK_USERS } from './constants.tsx';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [viewingUser, setViewingUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -20,7 +24,6 @@ const App: React.FC = () => {
   useEffect(() => {
     const initApp = async () => {
       try {
-        // Mock veri çekme
         const user = await ApiService.getCurrentUser('u2');
         const notifs = await ApiService.getNotifications();
         
@@ -29,13 +32,25 @@ const App: React.FC = () => {
       } catch (error) {
         console.error("EduTrack: Veri yükleme hatası:", error);
       } finally {
-        // Animasyon hissi için kısa bir gecikme
         setTimeout(() => setIsLoading(false), 300);
       }
     };
 
     initApp();
   }, []);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setSelectedCourseId(null);
+    setViewingUser(null);
+  };
+
+  const handleUserClick = (userId: string) => {
+    const user = MOCK_USERS.find(u => u.id === userId);
+    if (user) {
+      setViewingUser(user);
+    }
+  };
 
   if (isLoading || !currentUser) {
     return (
@@ -54,11 +69,18 @@ const App: React.FC = () => {
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const renderContent = () => {
+    if (viewingUser) {
+      return <Profile user={viewingUser} onBack={() => setViewingUser(null)} isOwnProfile={viewingUser.id === currentUser.id} />;
+    }
+
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard userRole={currentUser.role} userName={currentUser.name} currentUserId={currentUser.id} />;
       case 'courses':
-        return <Attendance currentUser={currentUser} />;
+        if (selectedCourseId) {
+          return <CourseDetail courseId={selectedCourseId} onBack={() => setSelectedCourseId(null)} currentUser={currentUser} onUserClick={handleUserClick} />;
+        }
+        return <Attendance currentUser={currentUser} onCourseClick={(id) => setSelectedCourseId(id)} />;
       case 'notifications':
         return <Notifications notifications={notifications} markAllAsRead={() => setNotifications(notifications.map(n => ({ ...n, isRead: true })))} />;
       case 'calendar':
@@ -68,7 +90,7 @@ const App: React.FC = () => {
       case 'admin':
         return <AdminPanel currentUser={currentUser} />;
       case 'profile':
-        return <Profile user={currentUser} />;
+        return <Profile user={currentUser} isOwnProfile={true} />;
       default:
         return <Dashboard userRole={currentUser.role} userName={currentUser.name} currentUserId={currentUser.id} />;
     }
@@ -79,15 +101,15 @@ const App: React.FC = () => {
   return (
     <Layout 
       activeTab={activeTab} 
-      setActiveTab={setActiveTab} 
-      onProfileClick={() => setActiveTab('profile')}
+      setActiveTab={handleTabChange} 
+      onProfileClick={() => { setActiveTab('profile'); setViewingUser(null); setSelectedCourseId(null); }}
       userRole={currentUser.role}
       userName={currentUser.name}
       unreadCount={unreadCount}
     >
       {renderContent()}
       
-      {isAdmin && activeTab === 'dashboard' && (
+      {isAdmin && activeTab === 'dashboard' && !viewingUser && (
         <button 
           onClick={() => setActiveTab('admin')}
           className="fixed right-6 bottom-32 w-14 h-14 bg-slate-900 text-white rounded-2xl shadow-2xl flex items-center justify-center z-40 active:scale-90 transition-transform"

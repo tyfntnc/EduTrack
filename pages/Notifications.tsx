@@ -10,36 +10,35 @@ interface NotificationsProps {
 export const Notifications: React.FC<NotificationsProps> = ({ notifications, markAllAsRead }) => {
   const getIcon = (type: NotificationType) => {
     switch (type) {
-      case NotificationType.UPCOMING_CLASS: return '📅';
-      case NotificationType.ATTENDANCE_UPDATE: return '✅';
-      case NotificationType.SYSTEM_MESSAGE: return '⚙️';
-      case NotificationType.ANNOUNCEMENT: return '📢';
+      case 'Ders Hatırlatıcısı' as NotificationType: return '📅';
+      case 'Yoklama Güncellemesi' as NotificationType: return '✅';
+      case 'Sistem Mesajı' as NotificationType: return '⚙️';
+      case 'Okul Duyurusu' as NotificationType: return '📢';
       default: return '🔔';
     }
   };
 
   const getBadge = (type: NotificationType) => {
-    switch (type) {
-      case NotificationType.ANNOUNCEMENT: 
-        return <span className="text-[7px] font-black bg-rose-500 text-white px-1.5 py-0.5 rounded uppercase tracking-widest ml-2">Yönetim</span>;
-      default: return null;
+    if (type === 'Okul Duyurusu' as NotificationType) {
+      return <span className="text-[7px] font-black bg-rose-500 text-white px-1.5 py-0.5 rounded uppercase tracking-widest ml-2">Yönetim</span>;
     }
+    return null;
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
-      <header className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Duyurular</h2>
-          <p className="text-slate-500 text-[10px] font-medium uppercase tracking-widest mt-1">Gelen Kutusu</p>
-        </div>
+    <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500 px-4 pt-4">
+      {/* Top Action Row */}
+      <div className="flex items-center justify-between px-1">
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+          {notifications.length} DUYURU
+        </span>
         <button 
           onClick={markAllAsRead}
           className="text-[9px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 px-3 py-2 rounded-xl active:scale-95 transition-transform"
         >
-          Tümünü Okundu İşaretle
+          Tümünü Oku
         </button>
-      </header>
+      </div>
 
       <div className="space-y-3 pb-10">
         {notifications.length === 0 ? (
@@ -79,12 +78,6 @@ export const Notifications: React.FC<NotificationsProps> = ({ notifications, mar
                 <p className={`text-[11px] leading-relaxed ${n.isRead ? 'text-slate-500' : 'text-slate-600 font-medium'}`}>
                   {n.message}
                 </p>
-                {!n.isRead && (
-                  <div className="pt-2 flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(79,70,229,0.5)]"></div>
-                    <span className="text-[8px] font-black text-indigo-500 uppercase tracking-widest">YENİ MESAJ</span>
-                  </div>
-                )}
               </div>
             </div>
           ))

@@ -21,21 +21,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser }) => {
   const [startTime, setStartTime] = useState('16:00');
   const [endTime, setEndTime] = useState('18:00');
 
-  // Edit/Enroll State
   const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
-  const [enrollingCourseId, setEnrollingCourseId] = useState<string | null>(null);
   const [editDay, setEditDay] = useState<number>(1);
   const [editStart, setEditStart] = useState<string>('');
   const [editEnd, setEditEnd] = useState<string>('');
 
-  // FILTERING LOGIC
-  // If System Admin, show all. If School Admin, show only their school's courses.
   const filteredCourses = currentUser.role === UserRole.SYSTEM_ADMIN 
     ? courses 
     : courses.filter(c => c.schoolId === currentUser.schoolId);
-
-  const teachers = users.filter(u => u.role === UserRole.TEACHER && (currentUser.role === UserRole.SYSTEM_ADMIN || u.schoolId === currentUser.schoolId));
-  const allStudents = users.filter(u => u.role === UserRole.STUDENT && (currentUser.role === UserRole.SYSTEM_ADMIN || u.schoolId === currentUser.schoolId));
 
   const handleCreateCourse = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +53,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser }) => {
 
   const startEditing = (course: Course) => {
     setEditingCourseId(course.id);
-    setEnrollingCourseId(null);
     setEditDay(course.schedule[0].day);
     setEditStart(course.schedule[0].startTime);
     setEditEnd(course.schedule[0].endTime);
@@ -83,101 +75,48 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser }) => {
     setEditingCourseId(null);
   };
 
-  const toggleStudentInCourse = (courseId: string, studentId: string) => {
-    setCourses(courses.map(c => {
-      if (c.id === courseId) {
-        const studentIds = c.studentIds.includes(studentId)
-          ? c.studentIds.filter(id => id !== studentId)
-          : [...c.studentIds, studentId];
-        return { ...c, studentIds };
-      }
-      return c;
-    }));
-  };
-
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 pb-12">
-      <header>
-        <h2 className="text-2xl font-bold text-slate-800">Yönetim Paneli</h2>
-        <p className="text-slate-500 text-sm">
-          {currentUser.role === UserRole.SYSTEM_ADMIN 
-            ? 'Tüm okulların yönetimini yapıyorsunuz.' 
-            : `Sadece kendi okulunuzu (${currentUser.schoolId}) yönetiyorsunuz.`}
-        </p>
-      </header>
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 pb-12 px-4 pt-4">
+      {/* Context Badge Replaces Header */}
+      <div className="bg-slate-100 p-3 rounded-2xl flex items-center justify-between">
+        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+           {currentUser.role === UserRole.SYSTEM_ADMIN ? 'Sistem Yönetimi' : 'Okul Yönetimi'}
+        </span>
+        <span className="text-[10px] font-bold text-indigo-600 bg-white px-2 py-1 rounded-lg">
+          {currentUser.schoolId || 'SİSTEM'}
+        </span>
+      </div>
 
-      {/* Course Creation Section */}
-      <section className="bg-white p-6 rounded-2xl border border-indigo-100 shadow-sm space-y-4 ring-2 ring-indigo-50">
-        <h3 className="font-bold text-slate-800 flex items-center gap-2">
+      <section className="bg-white p-6 rounded-[2rem] border border-indigo-100 shadow-sm space-y-4 ring-2 ring-indigo-50">
+        <h3 className="font-black text-[11px] text-slate-800 uppercase tracking-widest flex items-center gap-2">
           <span>✨</span> Yeni Ders Oluştur
         </h3>
         
         <form onSubmit={handleCreateCourse} className="space-y-4">
-          <div>
-            <label className="text-[10px] font-bold text-slate-400 uppercase">Ders Adı</label>
-            <input
-              type="text" required value={courseTitle}
-              onChange={(e) => setCourseTitle(e.target.value)}
-              placeholder="Ders başlığı"
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500/20"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase">Branş</label>
-              <select
-                value={selectedBranch}
-                onChange={(e) => setSelectedBranch(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm"
-              >
-                {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase">Kategori</label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm"
-              >
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <button type="submit" className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-indigo-100">
+          <input
+            type="text" required value={courseTitle}
+            onChange={(e) => setCourseTitle(e.target.value)}
+            placeholder="Ders Adı"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold focus:ring-2 focus:ring-indigo-500/20"
+          />
+          <button type="submit" className="w-full bg-indigo-600 text-white py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-100 active:scale-95 transition-all">
             Ders Oluştur
           </button>
         </form>
       </section>
 
-      {/* Filtered Courses List */}
-      <section className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-        <h3 className="font-bold text-slate-700">Yönetilen Dersler ({filteredCourses.length})</h3>
+      <section className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm space-y-4">
+        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">YÖNETİLEN DERSLER ({filteredCourses.length})</h3>
         <div className="space-y-3">
           {filteredCourses.map(course => (
-            <div key={course.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex flex-col gap-2">
+            <div key={course.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col gap-2">
               <div className="flex justify-between items-start">
                 <div>
                   <h4 className="text-xs font-bold text-slate-800">{course.title}</h4>
-                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">Okul: {course.schoolId}</p>
+                  <p className="text-[9px] text-slate-400 uppercase font-bold tracking-tight">KOD: {course.id}</p>
                 </div>
-                <div className="flex gap-1">
-                  <button onClick={() => startEditing(course)} className="text-[10px] font-bold px-2 py-1 rounded bg-white border border-slate-200">Takvim</button>
-                  <button onClick={() => setEnrollingCourseId(course.id)} className="text-[10px] font-bold px-2 py-1 rounded bg-white border border-slate-200">Öğrenciler</button>
-                </div>
+                <button onClick={() => startEditing(course)} className="text-[9px] font-black uppercase bg-white border border-slate-200 px-3 py-1.5 rounded-xl active:scale-90 transition-transform">Takvim</button>
               </div>
-              
-              {editingCourseId === course.id && (
-                <div className="grid grid-cols-3 gap-2 p-2 bg-white rounded-lg border border-indigo-100">
-                  <select value={editDay} onChange={(e) => setEditDay(parseInt(e.target.value))} className="text-[10px] p-1 border rounded">
-                    {DAYS.map((d, i) => <option value={i}>{d}</option>)}
-                  </select>
-                  <input type="time" value={editStart} onChange={(e) => setEditStart(e.target.value)} className="text-[10px] p-1 border rounded" />
-                  <button onClick={() => saveEdit(course.id)} className="bg-indigo-600 text-white text-[10px] rounded font-bold">Kaydet</button>
-                </div>
-              )}
             </div>
           ))}
         </div>

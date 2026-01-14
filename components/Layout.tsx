@@ -45,9 +45,9 @@ const NavIcon = ({ id, active }: { id: string, active: boolean }) => {
 
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onProfileClick, userRole, userName, unreadCount }) => {
   const tabs = [
-    { id: 'courses', label: 'Eğitim' },
+    { id: 'courses', label: 'Eğitimlerim' },
     { id: 'calendar', label: 'Takvim' },
-    { id: 'dashboard', label: 'Ev', center: true },
+    { id: 'dashboard', label: 'Ana Sayfa', center: true },
     { id: 'notifications', label: 'Duyuru', badge: unreadCount > 0 },
     { id: 'other', label: 'Analiz' },
   ];

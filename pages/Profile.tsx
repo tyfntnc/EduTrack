@@ -4,11 +4,23 @@ import { User } from '../types';
 
 interface ProfileProps {
   user: User;
+  onBack?: () => void;
+  isOwnProfile?: boolean;
 }
 
-export const Profile: React.FC<ProfileProps> = ({ user }) => {
+export const Profile: React.FC<ProfileProps> = ({ user, onBack, isOwnProfile = false }) => {
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 px-4">
+      {onBack && (
+        <button 
+          onClick={onBack}
+          className="pt-4 flex items-center gap-2 text-slate-400 active:text-indigo-600 transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span className="text-[10px] font-black uppercase tracking-widest">Geri Dön</span>
+        </button>
+      )}
+      
       <header className="text-center space-y-4 pt-4">
         <div className="relative inline-block">
           <div className="w-32 h-32 rounded-[3.5rem] bg-slate-50 overflow-hidden border-4 border-white shadow-2xl mx-auto ring-1 ring-slate-100">
@@ -28,7 +40,7 @@ export const Profile: React.FC<ProfileProps> = ({ user }) => {
       </header>
 
       <section className="grid grid-cols-1 gap-3">
-        <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] ml-2">Kişisel Bilgiler</h3>
+        <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] ml-2">İletişim Bilgileri</h3>
         
         <div className="bg-white border border-slate-100 p-6 rounded-[2.5rem] space-y-5 shadow-sm">
           <div className="flex items-center gap-5">
@@ -53,38 +65,51 @@ export const Profile: React.FC<ProfileProps> = ({ user }) => {
         </div>
       </section>
 
-      <section className="space-y-4">
-        <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] ml-2">Hesap Yönetimi</h3>
-        
-        <div className="grid grid-cols-1 gap-2.5">
-          {[
-            { label: 'Başarı ve Gelişim', desc: 'Sertifikalar ve rozetler', icon: '🏆', color: 'bg-amber-50 text-amber-600' },
-            { label: 'Hesap Ayarları', desc: 'Profilini düzenle', icon: '⚙️', color: 'bg-slate-50 text-slate-600' },
-            { label: 'Güvenlik Merkezin', desc: 'Şifre ve iki adımlı doğrulama', icon: '🛡️', color: 'bg-slate-50 text-slate-600' },
-            { label: 'Uygulama Tercihleri', desc: 'Tema ve dil ayarları', icon: '🎨', color: 'bg-slate-50 text-slate-600' },
-          ].map((item, i) => (
-            <button key={i} className="w-full flex items-center justify-between p-5 bg-white border border-slate-100 rounded-[2rem] group hover:border-indigo-100 active:scale-[0.98] transition-all shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl ${item.color}`}>
-                  {item.icon}
+      {isOwnProfile && (
+        <section className="space-y-4">
+          <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] ml-2">Hesap Yönetimi</h3>
+          
+          <div className="grid grid-cols-1 gap-2.5">
+            {[
+              { label: 'Başarı ve Gelişim', desc: 'Sertifikalar ve rozetler', icon: '🏆', color: 'bg-amber-50 text-amber-600' },
+              { label: 'Hesap Ayarları', desc: 'Profilini düzenle', icon: '⚙️', color: 'bg-slate-50 text-slate-600' },
+              { label: 'Güvenlik Merkezin', desc: 'Şifre ve iki adımlı doğrulama', icon: '🛡️', color: 'bg-slate-50 text-slate-600' },
+            ].map((item, i) => (
+              <button key={i} className="w-full flex items-center justify-between p-5 bg-white border border-slate-100 rounded-[2rem] group hover:border-indigo-100 active:scale-[0.98] transition-all shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl ${item.color}`}>
+                    {item.icon}
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{item.label}</p>
+                    <p className="text-[9px] font-medium text-slate-400 uppercase tracking-tighter">{item.desc}</p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{item.label}</p>
-                  <p className="text-[9px] font-medium text-slate-400 uppercase tracking-tighter">{item.desc}</p>
-                </div>
-              </div>
-              <svg className="text-slate-200 group-hover:text-indigo-400 transition-colors" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-            </button>
-          ))}
-        </div>
-      </section>
+                <svg className="text-slate-200 group-hover:text-indigo-400 transition-colors" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
-      <div className="px-2">
-        <button className="w-full py-5 rounded-[2.25rem] bg-rose-50 text-rose-600 border border-rose-100 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-rose-500 hover:text-white transition-all active:scale-95 shadow-sm shadow-rose-100">
-          Oturumu Güvenli Kapat
-        </button>
-        <p className="text-center text-[8px] text-slate-300 font-bold uppercase tracking-[0.3em] mt-6 italic">EduTrack Mobile v2.5.0</p>
-      </div>
+      {!isOwnProfile && (
+        <section className="space-y-4">
+          <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] ml-2">Hızlı İşlemler</h3>
+          <div className="grid grid-cols-2 gap-3">
+             <button className="p-4 bg-indigo-600 text-white rounded-3xl font-bold text-xs shadow-lg shadow-indigo-100 active:scale-95 transition-transform">Mesaj Gönder</button>
+             <button className="p-4 bg-white border border-slate-100 text-slate-900 rounded-3xl font-bold text-xs shadow-sm active:scale-95 transition-transform">Rapor İste</button>
+          </div>
+        </section>
+      )}
+
+      {isOwnProfile && (
+        <div className="px-2">
+          <button className="w-full py-5 rounded-[2.25rem] bg-rose-50 text-rose-600 border border-rose-100 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-rose-500 hover:text-white transition-all active:scale-95 shadow-sm shadow-rose-100">
+            Oturumu Güvenli Kapat
+          </button>
+          <p className="text-center text-[8px] text-slate-300 font-bold uppercase tracking-[0.3em] mt-6 italic">EduTrack Mobile v2.5.0</p>
+        </div>
+      )}
     </div>
   );
 };
