@@ -69,6 +69,7 @@ export interface Course {
   studentIds: string[];
   title: string;
   location?: string;
+  address?: string; // Yeni alan
   instructorNotes?: string;
   schedule: {
     day: number;

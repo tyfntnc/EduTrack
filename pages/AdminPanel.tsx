@@ -68,9 +68,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onImpersona
     const title = fd.get('title') as string;
     const teacherId = fd.get('teacherId') as string;
     const branchId = fd.get('branchId') as string;
+    const location = fd.get('location') as string;
+    const address = fd.get('address') as string;
 
     if (editingItem) {
-      setCourses(prev => prev.map(c => c.id === editingItem.id ? { ...c, title, teacherId, branchId } : c));
+      setCourses(prev => prev.map(c => c.id === editingItem.id ? { ...c, title, teacherId, branchId, location, address } : c));
     } else {
       const newCourse: Course = {
         id: `crs-${Date.now()}`,
@@ -78,6 +80,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onImpersona
         title,
         teacherId,
         branchId,
+        location,
+        address,
         categoryId: 'c1',
         studentIds: [],
         schedule: [{ day: 1, startTime: '09:00', endTime: '10:30' }]
@@ -156,7 +160,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onImpersona
 
         <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
           <button onClick={() => setDetailSubTab('profiles')} className={`flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase transition-all ${detailSubTab === 'profiles' ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600' : 'text-slate-400'}`}>Profiller</button>
-          <button onClick={() => setDetailSubTab('courses')} className={`flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase transition-all ${detailSubTab === 'courses' ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600' : 'text-slate-400'}`}>Dersler</button>
+          <button onClick={() => setDetailSubTab('courses')} className={`flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase transition-all ${detailSubTab === 'courses' ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600' : 'text-slate-400'}`}>Kurslar</button>
         </div>
 
         {detailSubTab === 'profiles' ? (
@@ -215,7 +219,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onImpersona
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-32 px-4 pt-4">
       
-      {/* GLOBAL CONTEXT BAR (System Admin Only) */}
       {isSystemAdmin && activeTab !== 'school-detail' && (
         <div className="bg-indigo-600 p-4 rounded-[2rem] text-white shadow-xl flex items-center justify-between">
           <div className="min-w-0">
@@ -232,21 +235,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onImpersona
         </div>
       )}
 
-      {/* TABS */}
       {activeTab !== 'school-detail' && (
         <div className="flex gap-1.5 p-1 bg-slate-100 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
           {isSystemAdmin && (
             <button onClick={() => setActiveTab('schools')} className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase transition-all ${activeTab === 'schools' ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600' : 'text-slate-400'}`}>Okullar</button>
           )}
-          <button onClick={() => setActiveTab('courses')} className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase transition-all ${activeTab === 'courses' ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600' : 'text-slate-400'}`}>Dersler</button>
+          <button onClick={() => setActiveTab('courses')} className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase transition-all ${activeTab === 'courses' ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600' : 'text-slate-400'}`}>Kurslar</button>
           <button onClick={() => setActiveTab('users')} className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase transition-all ${activeTab === 'users' ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600' : 'text-slate-400'}`}>Kullanıcılar</button>
         </div>
       )}
 
-      {/* VIEW: SCHOOL-DETAIL */}
       {activeTab === 'school-detail' && renderSchoolDetail()}
 
-      {/* CONTENT: SCHOOLS */}
       {activeTab === 'schools' && isSystemAdmin && (
         <div className="space-y-3">
           <button onClick={() => setModalType('school')} className="w-full py-4 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2rem] flex items-center justify-center gap-2 text-slate-400 hover:text-indigo-600 hover:border-indigo-600 transition-all">
@@ -270,12 +270,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onImpersona
         </div>
       )}
 
-      {/* CONTENT: COURSES & USERS */}
       {(activeTab === 'courses' || activeTab === 'users') && (
         <div className="space-y-4">
           <div className="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <div className="space-y-1">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{activeTab === 'courses' ? 'DERS İŞLEMLERİ' : 'PERSONEL & ÖĞRENCİ'}</h3>
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{activeTab === 'courses' ? 'KURS İŞLEMLERİ' : 'PERSONEL & ÖĞRENCİ'}</h3>
               <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{currentSchool?.name}</p>
             </div>
             <button 
@@ -311,9 +310,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onImpersona
                     <h4 className="text-[11px] font-bold text-slate-800 dark:text-slate-100 truncate">{user.name}</h4>
                     <span className={`text-[6px] font-black px-1.5 py-0.5 rounded-md uppercase ${user.role === UserRole.TEACHER ? 'bg-blue-50 text-blue-600' : user.role === UserRole.SCHOOL_ADMIN ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'}`}>{user.role}</span>
                   </div>
-                  <div className="flex gap-2">
-                     <a href={`tel:${user.phoneNumber}`} className="p-2 text-slate-300 active:text-slate-900"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></a>
-                  </div>
                 </div>
               ))
             )}
@@ -321,7 +317,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onImpersona
         </div>
       )}
 
-      {/* MODAL: SCHOOL ADD/EDIT */}
       {modalType === 'school' && (
         <div className="fixed inset-0 z-[600] flex items-center justify-center p-6 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={closeModal} />
@@ -336,31 +331,39 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onImpersona
         </div>
       )}
 
-      {/* MODAL: COURSE ADD/EDIT */}
       {modalType === 'course' && (
         <div className="fixed inset-0 z-[600] flex items-center justify-center p-6 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={closeModal} />
           <form onSubmit={handleSaveCourse} className="bg-white dark:bg-slate-900 w-full max-w-[320px] rounded-[3rem] p-7 relative z-10 shadow-2xl border border-slate-100 dark:border-slate-800 animate-in zoom-in-95">
              <h3 className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-widest mb-6">{editingItem ? 'KURSU DÜZENLE' : 'YENİ KURS EKLE'}</h3>
              <div className="space-y-4">
-                <input name="title" defaultValue={editingItem?.title} required type="text" placeholder="Ders Başlığı" className="w-full bg-slate-50 dark:bg-slate-800 px-4 py-3 rounded-2xl text-[10px] font-bold outline-none border border-slate-100 dark:border-slate-700" />
+                <input name="title" defaultValue={editingItem?.title} required type="text" placeholder="Kurs Başlığı" className="w-full bg-slate-50 dark:bg-slate-800 px-4 py-3 rounded-2xl text-[10px] font-bold outline-none border border-slate-100 dark:border-slate-700" />
                 
                 <select name="branchId" defaultValue={editingItem?.branchId || 'b1'} className="w-full bg-slate-50 dark:bg-slate-800 px-4 py-3 rounded-2xl text-[10px] font-bold outline-none border border-slate-100 dark:border-slate-700">
                   {INITIAL_BRANCHES.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                 </select>
 
                 <select name="teacherId" defaultValue={editingItem?.teacherId || ''} required className="w-full bg-slate-50 dark:bg-slate-800 px-4 py-3 rounded-2xl text-[10px] font-bold outline-none border border-slate-100 dark:border-slate-700">
-                  <option value="" disabled>Öğretmen Seçin</option>
+                  <option value="" disabled>Antrenör Seçin</option>
                   {users.filter(u => u.role === UserRole.TEACHER && u.schoolId === selectedSchoolId).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </select>
 
-                <button type="submit" className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg">DERSİ KAYDET</button>
+                <div className="space-y-1">
+                  <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest ml-1">ADRES VEYA KOORDİNAT (ENLEM, BOYLAМ)</label>
+                  <input name="address" defaultValue={editingItem?.address} required type="text" placeholder="Örn: 41.008, 28.978 veya Tam Adres" className="w-full bg-slate-50 dark:bg-slate-800 px-4 py-3 rounded-2xl text-[10px] font-bold outline-none border border-slate-100 dark:border-slate-700" />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest ml-1">KONUM DETAYI</label>
+                  <input name="location" defaultValue={editingItem?.location} required type="text" placeholder="Saha, Salon veya Laboratuvar" className="w-full bg-slate-50 dark:bg-slate-800 px-4 py-3 rounded-2xl text-[10px] font-bold outline-none border border-slate-100 dark:border-slate-700" />
+                </div>
+
+                <button type="submit" className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg">KURSU KAYDET</button>
              </div>
           </form>
         </div>
       )}
 
-      {/* MODAL: USER ADD (TEACHER/STUDENT/ADMIN) */}
       {modalType === 'user' && (
         <div className="fixed inset-0 z-[600] flex items-center justify-center p-6 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={closeModal} />
@@ -373,10 +376,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onImpersona
              </div>
              <div className="space-y-4">
                 <input name="name" required type="text" placeholder="Ad Soyad" className="w-full bg-slate-50 dark:bg-slate-800 px-4 py-3 rounded-2xl text-[10px] font-bold outline-none border border-slate-100 dark:border-slate-700" />
-                <button 
-                  type="submit"
-                  className={`w-full py-4 ${newUserRole === UserRole.SCHOOL_ADMIN ? 'bg-indigo-600' : newUserRole === UserRole.TEACHER ? 'bg-blue-600' : 'bg-emerald-600'} text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg transition-colors`}
-                >KAYDI TAMAMLA</button>
+                <button type="submit" className={`w-full py-4 ${newUserRole === UserRole.SCHOOL_ADMIN ? 'bg-indigo-600' : newUserRole === UserRole.TEACHER ? 'bg-blue-600' : 'bg-emerald-600'} text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg transition-colors`}>KAYDI TAMAMLA</button>
              </div>
           </form>
         </div>

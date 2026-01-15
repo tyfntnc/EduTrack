@@ -3,6 +3,7 @@
   "description": "Okullar ve Antrenörler için Akıllı Takip Sistemi",
   "requestFramePermissions": [
     "camera",
-    "microphone"
+    "microphone",
+    "geolocation"
   ]
 }
