@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
-import { Notification, NotificationType, UserRole, User } from '../types';
-import { INITIAL_BRANCHES, INITIAL_CATEGORIES } from '../constants';
+import React, { useState, useMemo } from 'react';
+import { Notification, NotificationType, UserRole, User, Course } from '../types';
+import { INITIAL_BRANCHES, INITIAL_CATEGORIES, MOCK_USERS, MOCK_COURSES } from '../constants';
 
 interface NotificationsProps {
   notifications: Notification[];
@@ -15,12 +15,11 @@ interface SavedAnnouncement {
   id: string;
   title: string;
   content: string;
-  schoolId: string;
-  branchId: string;
-  categoryId: string;
+  targetType: 'all_school' | 'specific_course' | 'specific_profile' | 'global';
+  targetId: string; // School ID, Course ID or User ID
+  status: 'draft' | 'sent';
   createdAt: string;
   sentAt?: string;
-  status: 'draft' | 'sent';
 }
 
 export const Notifications: React.FC<NotificationsProps> = ({ 
@@ -33,43 +32,70 @@ export const Notifications: React.FC<NotificationsProps> = ({
   const [viewMode, setViewMode] = useState<'inbox' | 'create' | 'manage'>('inbox');
   const [selectedNotifId, setSelectedNotifId] = useState<string | null>(null);
   const [savedAnnouncements, setSavedAnnouncements] = useState<SavedAnnouncement[]>([]);
+  const [editingAnnouncementId, setEditingAnnouncementId] = useState<string | null>(null);
   
   // Form States
-  const [newTitle, setNewTitle] = useState('');
-  const [newContent, setNewContent] = useState('');
-  const [selSchool, setSelSchool] = useState(currentUser.schoolId || 'school-a');
-  const [selBranch, setSelBranch] = useState(INITIAL_BRANCHES[0].id);
-  const [selCategory, setSelCategory] = useState(INITIAL_CATEGORIES[0].id);
+  const [formData, setFormData] = useState<Partial<SavedAnnouncement>>({
+    title: '',
+    content: '',
+    targetType: currentUser.role === UserRole.TEACHER ? 'specific_course' : 'all_school',
+    targetId: ''
+  });
 
   const canManage = currentUser.role === UserRole.TEACHER || 
                     currentUser.role === UserRole.SCHOOL_ADMIN || 
                     currentUser.role === UserRole.SYSTEM_ADMIN;
 
-  const handleSave = () => {
-    if (!newTitle || !newContent) {
-      alert("Lütfen tüm alanları doldurun.");
-      return;
+  const targetOptions = useMemo(() => {
+    const schools = Array.from(new Set(MOCK_USERS.map(u => u.schoolId).filter(Boolean)));
+    const myCourses = MOCK_COURSES.filter(c => currentUser.role === UserRole.SYSTEM_ADMIN || (currentUser.role === UserRole.SCHOOL_ADMIN && c.schoolId === currentUser.schoolId) || c.teacherId === currentUser.id);
+    const users = MOCK_USERS.filter(u => currentUser.role === UserRole.SYSTEM_ADMIN || (currentUser.role === UserRole.SCHOOL_ADMIN && u.schoolId === currentUser.schoolId));
+
+    return { schools, myCourses, users };
+  }, [currentUser]);
+
+  const handleSaveDraft = () => {
+    if (!formData.title || !formData.content) return;
+
+    if (editingAnnouncementId) {
+      setSavedAnnouncements(prev => prev.map(ann => 
+        ann.id === editingAnnouncementId 
+          ? { ...ann, title: formData.title!, content: formData.content!, targetType: formData.targetType!, targetId: formData.targetId! } 
+          : ann
+      ));
+      alert('Duyuru güncellendi! ✅');
+      setEditingAnnouncementId(null);
+    } else {
+      const newDraft: SavedAnnouncement = {
+        id: Math.random().toString(36).substr(2, 9),
+        title: formData.title!,
+        content: formData.content!,
+        targetType: formData.targetType || 'all_school',
+        targetId: formData.targetId || (currentUser.schoolId || ''),
+        status: 'draft',
+        createdAt: new Date().toISOString()
+      };
+      setSavedAnnouncements([newDraft, ...savedAnnouncements]);
+      alert('Taslak kaydedildi! 📝');
     }
-    const announcement: SavedAnnouncement = {
-      id: Math.random().toString(36).substr(2, 9),
-      title: newTitle,
-      content: newContent,
-      schoolId: selSchool,
-      branchId: selBranch,
-      categoryId: selCategory,
-      createdAt: new Date().toISOString(),
-      status: 'draft'
-    };
-    setSavedAnnouncements([announcement, ...savedAnnouncements]);
-    setNewTitle('');
-    setNewContent('');
-    alert("Duyuru taslak olarak kaydedildi.");
+    
+    setFormData({ title: '', content: '', targetType: 'all_school', targetId: '' });
     setViewMode('manage');
+  };
+
+  const handleEdit = (ann: SavedAnnouncement) => {
+    setEditingAnnouncementId(ann.id);
+    setFormData({
+      title: ann.title,
+      content: ann.content,
+      targetType: ann.targetType,
+      targetId: ann.targetId
+    });
+    setViewMode('create');
   };
 
   const handleSend = (id: string) => {
     const now = new Date().toISOString();
-    
     setSavedAnnouncements(prev => prev.map(ann => {
       if (ann.id === id) {
         const newNotif: Notification = {
@@ -86,305 +112,218 @@ export const Notifications: React.FC<NotificationsProps> = ({
       }
       return ann;
     }));
-    alert("Duyuru yayınlandı ve tüm kullanıcılara gönderildi! ✅");
+    alert('Duyuru başarıyla gönderildi! 📢');
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm('Bu duyuruyu tamamen silmek istediğinize emin misiniz?')) {
+      setSavedAnnouncements(prev => prev.filter(ann => ann.id !== id));
+      if (editingAnnouncementId === id) setEditingAnnouncementId(null);
+    }
+  };
+
+  const formatDate = (iso: string) => {
+    const d = new Date(iso);
+    return `${d.getDate()} ${['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'][d.getMonth()]} ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
   };
 
   const getIcon = (type: NotificationType) => {
     switch (type) {
-      case 'Ders Hatırlatıcısı' as NotificationType: return '📅';
-      case 'Yoklama Güncellemesi' as NotificationType: return '✅';
-      case 'Sistem Mesajı' as NotificationType: return '⚙️';
-      case 'Okul Duyurusu' as NotificationType: return '📢';
+      case NotificationType.UPCOMING_CLASS: return '📅';
+      case NotificationType.ATTENDANCE_UPDATE: return '✅';
+      case NotificationType.SYSTEM_MESSAGE: return '⚙️';
+      case NotificationType.ANNOUNCEMENT: return '📢';
       default: return '🔔';
     }
   };
 
-  const handleNotifClick = (id: string) => {
-    markAsRead(id);
-    setSelectedNotifId(id);
+  const handleCancelEdit = () => {
+    setEditingAnnouncementId(null);
+    setFormData({ title: '', content: '', targetType: 'all_school', targetId: '' });
+    setViewMode('manage');
   };
 
   const selectedNotif = notifications.find(n => n.id === selectedNotifId);
-
-  // DETAY GÖRÜNÜMÜ
   if (selectedNotif && viewMode === 'inbox') {
     return (
-      <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 px-4 pt-4 pb-24 transition-colors">
-        <header className="flex items-center gap-4">
-          <button 
-            onClick={() => setSelectedNotifId(null)}
-            className="w-10 h-10 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl flex items-center justify-center text-slate-400 dark:text-slate-600 active:scale-90 transition-all"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500 px-4 pt-2 pb-24">
+        <header className="flex items-center gap-3">
+          <button onClick={() => setSelectedNotifId(null)} className="w-9 h-9 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl flex items-center justify-center text-slate-400 active:scale-90">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="15 18 9 12 15 6"></polyline></svg>
           </button>
-          <div>
-            <h2 className="text-xl font-black text-slate-900 dark:text-slate-100 leading-none">Duyuru Detayı</h2>
-            <p className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mt-1">{selectedNotif.type}</p>
-          </div>
+          <h2 className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-widest">DUYURU DETAYI</h2>
         </header>
-
-        <section className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl space-y-6">
-          <div className="flex justify-center">
-             <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/30 rounded-[2rem] flex items-center justify-center text-4xl shadow-inner">
-               {getIcon(selectedNotif.type)}
-             </div>
+        <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl space-y-4 text-center">
+          <div className="w-14 h-14 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center text-3xl mx-auto shadow-inner">{getIcon(selectedNotif.type)}</div>
+          <div className="space-y-1">
+            <h3 className="text-base font-black text-slate-900 dark:text-slate-100 leading-tight">{selectedNotif.title}</h3>
+            <p className="text-[8px] font-black text-indigo-500 uppercase tracking-widest">{formatDate(selectedNotif.timestamp)}</p>
           </div>
-          
-          <div className="text-center space-y-2">
-            <h3 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 leading-tight">{selectedNotif.title}</h3>
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest">
-                {new Date(selectedNotif.timestamp).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })}
-              </span>
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase">
-                Saat: {new Date(selectedNotif.timestamp).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            </div>
-          </div>
-
-          <div className="w-full h-px bg-slate-50 dark:bg-slate-800"></div>
-
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed text-center px-2">
-            {selectedNotif.message}
-          </p>
-
-          <button 
-            onClick={() => setSelectedNotifId(null)}
-            className="w-full py-4 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all"
-          >
-            Anladım, Kapat
-          </button>
+          <p className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed px-2">{selectedNotif.message}</p>
+          <button onClick={() => setSelectedNotifId(null)} className="w-full py-4 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all">Anladım</button>
         </section>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500 px-4 pt-4 transition-colors pb-24">
-      
-      {/* HEADER / NAVIGATION */}
-      <div className="flex flex-col gap-4">
+    <div className="space-y-4 animate-in fade-in duration-500 px-4 pt-2 pb-32">
+      <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between px-1">
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-600">
-            {viewMode === 'inbox' ? `${notifications.length} DUYURULAR` : viewMode === 'create' ? 'YENİ DUYURU' : 'DUYURU YÖNETİMİ'}
+          <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">
+            {editingAnnouncementId ? 'DÜZENLEME MODU' : viewMode === 'inbox' ? `${notifications.length} BİLDİRİM` : viewMode === 'create' ? 'YENİ DUYURU' : `${savedAnnouncements.length} KAYITLI`}
           </span>
           {viewMode === 'inbox' && notifications.length > 0 && (
-            <button 
-              onClick={markAllAsRead}
-              className="text-[9px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-2 rounded-xl active:scale-95 transition-transform"
-            >
-              Tümünü Oku
-            </button>
+            <button onClick={markAllAsRead} className="text-[7px] font-black uppercase text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 rounded-lg">Tümünü Oku</button>
           )}
         </div>
-
+        
         {canManage && (
-          <div className="flex gap-2 p-1.5 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
-            <button 
-              onClick={() => { setViewMode('inbox'); setSelectedNotifId(null); }}
-              className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-tighter transition-all ${viewMode === 'inbox' ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600' : 'text-slate-400'}`}
-            >
-              Gelen
-            </button>
-            <button 
-              onClick={() => { setViewMode('create'); setSelectedNotifId(null); }}
-              className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-tighter transition-all ${viewMode === 'create' ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600' : 'text-slate-400'}`}
-            >
-              Oluştur
-            </button>
-            <button 
-              onClick={() => { setViewMode('manage'); setSelectedNotifId(null); }}
-              className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-tighter transition-all ${viewMode === 'manage' ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600' : 'text-slate-400'}`}
-            >
-              Yönet
-            </button>
+          <div className="flex gap-1.5 p-1 bg-slate-100 dark:bg-slate-900 rounded-[1.25rem] border border-slate-200 dark:border-slate-800">
+            <button onClick={() => { setViewMode('inbox'); setEditingAnnouncementId(null); }} className={`flex-1 py-2.5 rounded-xl text-[8px] font-black uppercase tracking-tighter transition-all ${viewMode === 'inbox' ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600' : 'text-slate-400'}`}>Gelen</button>
+            <button onClick={() => setViewMode('create')} className={`flex-1 py-2.5 rounded-xl text-[8px] font-black uppercase tracking-tighter transition-all ${viewMode === 'create' || editingAnnouncementId ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600' : 'text-slate-400'}`}>{editingAnnouncementId ? 'Düzenle' : 'Oluştur'}</button>
+            <button onClick={() => { setViewMode('manage'); setEditingAnnouncementId(null); }} className={`flex-1 py-2.5 rounded-xl text-[8px] font-black uppercase tracking-tighter transition-all ${viewMode === 'manage' ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600' : 'text-slate-400'}`}>Yönet</button>
           </div>
         )}
       </div>
 
-      {/* VIEWS */}
-      <div className="space-y-3">
-        
-        {/* VIEW: INBOX */}
+      <div className="space-y-2">
         {viewMode === 'inbox' && (
           notifications.length === 0 ? (
-            <div className="text-center py-24 bg-slate-50 dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 border-dashed">
-              <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl mx-auto flex items-center justify-center shadow-sm mb-4">
-                <span className="text-2xl opacity-40">📭</span>
-              </div>
-              <p className="font-black text-[10px] uppercase tracking-widest text-slate-300 dark:text-slate-700">Henüz bildiriminiz yok.</p>
+            <div className="text-center py-16 bg-slate-50 dark:bg-slate-900/50 rounded-[2.5rem] border-2 border-dashed border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center gap-3">
+              <div className="text-4xl opacity-20">📭</div>
+              <p className="text-[9px] font-black uppercase text-slate-300 tracking-[0.2em]">Henüz bildirim yok.</p>
             </div>
           ) : (
-            notifications.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).map(n => (
-              <button 
-                key={n.id} 
-                onClick={() => handleNotifClick(n.id)}
-                className={`w-full text-left group p-5 rounded-[2.25rem] border transition-all duration-300 flex gap-4 active:scale-[0.98] ${
-                  n.isRead 
-                    ? 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800' 
-                    : 'bg-white dark:bg-slate-900 border-indigo-200 dark:border-indigo-900/50 shadow-xl shadow-indigo-50 dark:shadow-none ring-1 ring-indigo-50 dark:ring-indigo-900/20'
-                }`}
-              >
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm shrink-0 border transition-colors ${
-                  n.isRead ? 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-600' : 'bg-indigo-600 border-indigo-600 text-white'
-                }`}>
-                  {getIcon(n.type)}
-                </div>
-                <div className="flex-1 space-y-1 min-w-0">
-                  <div className="flex justify-between items-start">
-                    <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm tracking-tight truncate">{n.title}</h4>
-                    <span className="text-[8px] font-black text-slate-300 dark:text-slate-600 tracking-tighter shrink-0 ml-2">
-                      {new Date(n.timestamp).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+            notifications.map(n => (
+              <button key={n.id} onClick={() => handleNotifClick(n.id)} className={`w-full text-left p-3.5 rounded-2xl border transition-all flex gap-3.5 active:scale-[0.98] ${n.isRead ? 'bg-white dark:bg-slate-900 border-slate-50 dark:border-slate-800 opacity-60' : 'bg-white dark:bg-slate-900 border-indigo-100 dark:border-indigo-900/50 shadow-md ring-1 ring-indigo-500/5'}`}>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 ${n.isRead ? 'bg-slate-50 dark:bg-slate-800 text-slate-400' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none'}`}>{getIcon(n.type)}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-start mb-1">
+                    <h4 className="font-black text-slate-900 dark:text-slate-100 text-[11px] truncate leading-none">{n.title}</h4>
+                    <span className="text-[7px] font-bold text-slate-300 dark:text-slate-600 uppercase shrink-0 ml-2">{formatDate(n.timestamp).split(' ')[0]}</span>
                   </div>
-                  <p className={`text-[10px] leading-relaxed truncate ${n.isRead ? 'text-slate-500 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400 font-medium'}`}>
-                    {n.message}
-                  </p>
-                  <div className="flex items-center gap-1.5 pt-1">
-                    <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">
-                       {new Date(n.timestamp).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' })}
-                    </span>
-                  </div>
+                  <p className="text-[9px] font-medium text-slate-500 dark:text-slate-400 leading-tight line-clamp-2">{n.message}</p>
                 </div>
               </button>
             ))
           )
         )}
 
-        {/* VIEW: CREATE */}
         {viewMode === 'create' && (
-          <div className="space-y-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-6 rounded-[2.5rem] shadow-sm animate-in slide-in-from-bottom-4 duration-300">
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Okul</label>
-                <select 
-                  value={selSchool} onChange={(e) => setSelSchool(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 py-3 text-xs font-bold outline-none"
-                >
-                  <option value="school-a">Okul A</option>
-                  <option value="school-b">Okul B</option>
-                </select>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Eğitim/Branş</label>
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 rounded-[2.5rem] shadow-xl space-y-4 animate-in slide-in-from-bottom-4">
+             <div className="space-y-3">
+                <div className="space-y-1">
+                  <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest ml-1">KİME GÖNDERİLECEK?</label>
                   <select 
-                    value={selBranch} onChange={(e) => setSelBranch(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 py-3 text-xs font-bold outline-none"
+                    value={formData.targetType} 
+                    onChange={(e) => setFormData({...formData, targetType: e.target.value as any, targetId: ''})} 
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl px-3 py-3 text-[10px] font-bold outline-none"
                   >
-                    {INITIAL_BRANCHES.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    {currentUser.role === UserRole.SYSTEM_ADMIN && <option value="global">Tüm Sistem (Global)</option>}
+                    {currentUser.role !== UserRole.TEACHER && <option value="all_school">Tüm Okul / Şube</option>}
+                    <option value="specific_course">Belirli Bir Kurs</option>
+                    <option value="specific_profile">Belirli Bir Profil</option>
                   </select>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kategori</label>
-                  <select 
-                    value={selCategory} onChange={(e) => setSelCategory(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl px-4 py-3 text-xs font-bold outline-none"
-                  >
-                    {INITIAL_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </div>
-              </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Duyuru Başlığı</label>
-                <input 
-                  type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="Örn: Hafta Sonu Antrenman İptali"
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Duyuru İçeriği</label>
-                <textarea 
-                  value={newContent} onChange={(e) => setNewContent(e.target.value)}
-                  placeholder="Detayları buraya yazınız..." rows={4}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none"
-                />
-              </div>
-
-              <button 
-                onClick={handleSave}
-                className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all mt-2"
-              >
-                Taslağı Kaydet
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* VIEW: MANAGE */}
-        {viewMode === 'manage' && (
-          <div className="space-y-3 animate-in slide-in-from-bottom-4 duration-300">
-            {savedAnnouncements.length === 0 ? (
-              <div className="text-center py-20 bg-slate-50 dark:bg-slate-900 rounded-[2.5rem] border border-dashed border-slate-200 dark:border-slate-800">
-                <p className="font-black text-[10px] uppercase tracking-widest text-slate-300 dark:text-slate-700">Kaydedilmiş duyuru bulunamadı.</p>
-              </div>
-            ) : (
-              savedAnnouncements.map(ann => (
-                <div key={ann.id} className="p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2.25rem] shadow-sm space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate tracking-tight">{ann.title}</h4>
-                        {ann.status === 'sent' && (
-                          <span className="text-[7px] font-black bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 px-1.5 py-0.5 rounded-md uppercase border border-emerald-200 dark:border-emerald-900/20 shrink-0">Gönderildi</span>
-                        )}
-                        {ann.status === 'draft' && (
-                          <span className="text-[7px] font-black bg-amber-100 dark:bg-amber-900/30 text-amber-600 px-1.5 py-0.5 rounded-md uppercase border border-amber-200 dark:border-amber-900/20 shrink-0">Taslak</span>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <span className="text-[8px] font-black uppercase tracking-tighter px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg border border-indigo-100 dark:border-indigo-900/20">
-                          {INITIAL_BRANCHES.find(b => b.id === ann.branchId)?.name}
-                        </span>
-                        <span className="text-[8px] font-black uppercase tracking-tighter px-2 py-0.5 bg-slate-50 dark:bg-slate-800 text-slate-500 rounded-lg">
-                          {INITIAL_CATEGORIES.find(c => c.id === ann.categoryId)?.name}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-[8px] font-black text-slate-300 dark:text-slate-700 uppercase">Kayıt: {new Date(ann.createdAt).toLocaleDateString()}</p>
-                      {ann.sentAt && (
-                        <p className="text-[7px] font-bold text-emerald-500 mt-0.5">Yayın: {new Date(ann.sentAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 pt-1">
-                    <button 
-                      onClick={() => alert(`DETAYLAR:\n${ann.content}`)}
-                      className="flex-1 py-3 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl text-[9px] font-black uppercase tracking-widest border border-slate-100 dark:border-slate-700 active:scale-95 transition-all"
+                {formData.targetType === 'specific_course' && (
+                  <div className="space-y-1 animate-in zoom-in-95">
+                    <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest ml-1">KURS SEÇİN</label>
+                    <select 
+                      value={formData.targetId} 
+                      onChange={(e) => setFormData({...formData, targetId: e.target.value})}
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl px-3 py-3 text-[10px] font-bold outline-none"
                     >
-                      Detay
-                    </button>
-                    {ann.status === 'draft' ? (
-                      <button 
-                        onClick={() => handleSend(ann.id)}
-                        className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100 dark:shadow-none active:scale-95 transition-all flex items-center justify-center gap-2"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polyline points="22 2 15 22 11 13 2 9 22 2"></polyline></svg>
-                        Gönder
-                      </button>
-                    ) : (
-                      <button 
-                        disabled
-                        className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-xl text-[9px] font-black uppercase tracking-widest cursor-not-allowed flex items-center justify-center gap-2"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                        Yayınlandı
-                      </button>
-                    )}
+                      <option value="">Kurs Listesi...</option>
+                      {targetOptions.myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                    </select>
                   </div>
+                )}
+
+                {formData.targetType === 'specific_profile' && (
+                  <div className="space-y-1 animate-in zoom-in-95">
+                    <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest ml-1">KULLANICI SEÇİN</label>
+                    <select 
+                      value={formData.targetId} 
+                      onChange={(e) => setFormData({...formData, targetId: e.target.value})}
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl px-3 py-3 text-[10px] font-bold outline-none"
+                    >
+                      <option value="">Kullanıcı Listesi...</option>
+                      {targetOptions.users.map(u => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
+                    </select>
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest ml-1">BAŞLIK</label>
+                  <input type="text" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} placeholder="Örn: Hafta Sonu Programı Hakkında" className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl px-4 py-3 text-[10px] font-bold outline-none" />
                 </div>
-              ))
-            )}
+                <div className="space-y-1">
+                  <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest ml-1">MESAJ İÇERİĞİ</label>
+                  <textarea value={formData.content} onChange={(e) => setFormData({...formData, content: e.target.value})} placeholder="Duyuru detaylarını buraya yazın..." rows={4} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl px-4 py-3 text-[10px] font-bold outline-none resize-none" />
+                </div>
+             </div>
+             
+             <div className="flex gap-2">
+                {editingAnnouncementId && (
+                   <button onClick={handleCancelEdit} className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-400 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all">İPTAL</button>
+                )}
+                <button onClick={handleSaveDraft} className="flex-[2] bg-indigo-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all">
+                  {editingAnnouncementId ? 'GÜNCELLEMEYİ KAYDET' : 'TASLAK OLARAK KAYDET'}
+                </button>
+             </div>
           </div>
         )}
 
+        {viewMode === 'manage' && (
+          <div className="space-y-3">
+             {savedAnnouncements.length === 0 ? (
+                <div className="text-center py-10 opacity-30 font-black text-[8px] uppercase tracking-widest">Henüz kayıtlı duyuru yok.</div>
+             ) : (
+               savedAnnouncements.map(ann => (
+                 <div key={ann.id} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 rounded-3xl shadow-sm space-y-3">
+                    <div className="flex justify-between items-start">
+                       <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                             <span className={`text-[6px] font-black px-1.5 py-0.5 rounded-md uppercase ${ann.status === 'draft' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                               {ann.status === 'draft' ? 'YENİ (TASLAK)' : 'GÖNDERİLDİ'}
+                             </span>
+                             <span className="text-[6px] font-bold text-slate-400 uppercase">
+                               {ann.status === 'draft' ? `Oluşturulma: ${formatDate(ann.createdAt)}` : `Gönderilme: ${formatDate(ann.sentAt!)}`}
+                             </span>
+                          </div>
+                          <h4 className="text-[10px] font-black text-slate-800 dark:text-slate-100 truncate">{ann.title}</h4>
+                       </div>
+                    </div>
+                    
+                    <div className="flex gap-2 pt-1 border-t border-slate-50 dark:border-slate-800 mt-2 pt-2">
+                       {ann.status === 'draft' && (
+                         <>
+                           <button onClick={() => handleSend(ann.id)} className="flex-1 bg-indigo-600 text-white py-2 rounded-xl text-[8px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 active:scale-95 transition-all">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                              GÖNDER
+                           </button>
+                           <button onClick={() => handleEdit(ann)} className="p-2 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-xl active:bg-slate-200">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                           </button>
+                         </>
+                       )}
+                       <button onClick={() => handleDelete(ann.id)} className="p-2 bg-rose-50 dark:bg-rose-900/20 text-rose-500 rounded-xl active:bg-rose-100">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                       </button>
+                    </div>
+                 </div>
+               ))
+             )}
+          </div>
+        )}
       </div>
     </div>
   );
+
+  function handleNotifClick(id: string) {
+    markAsRead(id);
+    setSelectedNotifId(id);
+  }
 };
