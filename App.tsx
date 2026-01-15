@@ -177,14 +177,45 @@ const App: React.FC = () => {
 
   // Splash bittikten sonra login durumu kontrol edilir
   if (!isAuthenticated) {
+    const renderAuthView = () => {
+      switch (authView) {
+        case 'login':
+          return (
+            <Login 
+              onLogin={handleLogin} 
+              onRegisterClick={() => setAuthView('register')} 
+              onForgotClick={() => setAuthView('forgot')} 
+              onBackToLanding={handleBackToLanding} 
+            />
+          );
+        case 'register':
+          return (
+            <Register 
+              onRegister={handleLogin} 
+              onBackToLogin={() => setAuthView('login')} 
+            />
+          );
+        case 'forgot':
+          return (
+            <ForgotPassword 
+              onBackToLogin={() => setAuthView('login')} 
+            />
+          );
+        default:
+          return (
+            <Login 
+              onLogin={handleLogin} 
+              onRegisterClick={() => setAuthView('register')} 
+              onForgotClick={() => setAuthView('forgot')} 
+              onBackToLanding={handleBackToLanding} 
+            />
+          );
+      }
+    };
+
     return (
       <>
-        <Login 
-          onLogin={handleLogin} 
-          onRegisterClick={() => setAuthView('register')} 
-          onForgotClick={() => setAuthView('forgot')} 
-          onBackToLanding={handleBackToLanding} 
-        />
+        {renderAuthView()}
         {isTransitioning && <LoadingScreen />}
       </>
     );

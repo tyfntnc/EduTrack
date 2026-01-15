@@ -80,7 +80,7 @@ export const Attendance: React.FC<AttendanceProps> = ({ currentUser, onCourseCli
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         </div>
         <input 
-          type="text" placeholder="Kayıtlı Derslerini Ara..." value={searchTerm}
+          type="text" placeholder="Kayıtlı Kurslarını Ara..." value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
             setTakenPage(1);
@@ -94,7 +94,7 @@ export const Attendance: React.FC<AttendanceProps> = ({ currentUser, onCourseCli
         <section className="space-y-3">
           <div className="flex items-center justify-between px-1">
             <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest">
-              ÖĞRENCİ OLARAK <span>({allCoursesTaken.length})</span>
+              KURSLARIM <span>({allCoursesTaken.length})</span>
             </h3>
             {totalTakenPages > 1 && (
               <span className="text-[8px] font-bold text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-0.5 rounded-full uppercase">
@@ -105,7 +105,7 @@ export const Attendance: React.FC<AttendanceProps> = ({ currentUser, onCourseCli
           <div className="space-y-2.5">
             {paginatedTaken.length === 0 ? (
               <div className="py-10 text-center bg-slate-50 dark:bg-slate-900 rounded-[2rem] border border-dashed border-slate-200 dark:border-slate-800">
-                 <p className="text-[10px] font-bold text-slate-300 dark:text-slate-700 uppercase">Kayıtlı ders bulunamadı</p>
+                 <p className="text-[10px] font-bold text-slate-300 dark:text-slate-700 uppercase">Kayıtlı kurs bulunamadı</p>
               </div>
             ) : (
               paginatedTaken.map(c => (

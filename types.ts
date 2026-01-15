@@ -49,6 +49,10 @@ export interface User {
   email: string;
   schoolId?: string;
   avatar?: string;
+  phoneNumber?: string;
+  birthDate?: string;
+  gender?: 'Erkek' | 'Kadın' | 'Belirtilmedi';
+  address?: string;
   branchIds?: string[];
   childIds?: string[];
   parentIds?: string[];
