@@ -264,7 +264,7 @@ const App: React.FC = () => {
       case 'calendar':
         return <Calendar currentUser={actingUser} onCourseClick={(id) => setSelectedCourseId(id)} />;
       case 'other':
-        return <Other />;
+        return <Other currentUser={actingUser} />;
       case 'admin':
         return <AdminPanel currentUser={currentUser} onImpersonate={handleSwitchActingUser} />;
       case 'profile':
