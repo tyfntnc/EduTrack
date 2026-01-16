@@ -133,6 +133,8 @@ export const Notifications: React.FC<NotificationsProps> = ({
       case NotificationType.ATTENDANCE_UPDATE: return '✅';
       case NotificationType.SYSTEM_MESSAGE: return '⚙️';
       case NotificationType.ANNOUNCEMENT: return '📢';
+      case NotificationType.PAYMENT_REMINDER: return '💳';
+      case NotificationType.PAYMENT_CONFIRMED: return '💰';
       default: return '🔔';
     }
   };
@@ -143,24 +145,31 @@ export const Notifications: React.FC<NotificationsProps> = ({
     setViewMode('manage');
   };
 
+  const handleNotifClick = (id: string) => {
+    markAsRead(id);
+    setSelectedNotifId(id);
+  }
+
   const selectedNotif = notifications.find(n => n.id === selectedNotifId);
   if (selectedNotif && viewMode === 'inbox') {
     return (
       <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500 px-4 pt-2 pb-24">
         <header className="flex items-center gap-3">
-          <button onClick={() => setSelectedNotifId(null)} className="w-9 h-9 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl flex items-center justify-center text-slate-400 active:scale-90">
+          <button onClick={() => setSelectedNotifId(null)} className="w-9 h-9 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl flex items-center justify-center text-slate-400 active:scale-90 transition-all">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="15 18 9 12 15 6"></polyline></svg>
           </button>
           <h2 className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-widest">DUYURU DETAYI</h2>
         </header>
-        <section className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl space-y-4 text-center">
-          <div className="w-14 h-14 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center text-3xl mx-auto shadow-inner">{getIcon(selectedNotif.type)}</div>
+        <section className={`bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border shadow-xl space-y-4 text-center transition-all ${selectedNotif.type === NotificationType.PAYMENT_REMINDER ? 'border-rose-100 dark:border-rose-900/40' : 'border-slate-100 dark:border-slate-800'}`}>
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mx-auto shadow-inner ${selectedNotif.type === NotificationType.PAYMENT_REMINDER ? 'bg-rose-50 dark:bg-rose-950/30 text-rose-500' : 'bg-indigo-50 dark:bg-indigo-900/30'}`}>
+            {getIcon(selectedNotif.type)}
+          </div>
           <div className="space-y-1">
             <h3 className="text-base font-black text-slate-900 dark:text-slate-100 leading-tight">{selectedNotif.title}</h3>
             <p className="text-[8px] font-black text-indigo-500 uppercase tracking-widest">{formatDate(selectedNotif.timestamp)}</p>
           </div>
           <p className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed px-2">{selectedNotif.message}</p>
-          <button onClick={() => setSelectedNotifId(null)} className="w-full py-4 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all">Anladım</button>
+          <button onClick={() => setSelectedNotifId(null)} className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all ${selectedNotif.type === NotificationType.PAYMENT_REMINDER ? 'bg-rose-500 text-white' : 'bg-slate-900 dark:bg-indigo-600 text-white'}`}>Anladım</button>
         </section>
       </div>
     );
@@ -171,7 +180,7 @@ export const Notifications: React.FC<NotificationsProps> = ({
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between px-1">
           <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">
-            {editingAnnouncementId ? 'DÜZENLEME MODU' : viewMode === 'inbox' ? `${notifications.length} BİLDİRİM` : viewMode === 'create' ? 'YENİ DUYURU' : `${savedAnnouncements.length} KAYITLI`}
+            {editingAnnouncementId ? 'DÜZENLEME MODU' : viewMode === 'inbox' ? `${notifications.length} DUYURU` : viewMode === 'create' ? 'YENİ DUYURU' : `${savedAnnouncements.length} KAYITLI`}
           </span>
           {viewMode === 'inbox' && notifications.length > 0 && (
             <button onClick={markAllAsRead} className="text-[7px] font-black uppercase text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 rounded-lg">Tümünü Oku</button>
@@ -196,8 +205,8 @@ export const Notifications: React.FC<NotificationsProps> = ({
             </div>
           ) : (
             notifications.map(n => (
-              <button key={n.id} onClick={() => handleNotifClick(n.id)} className={`w-full text-left p-3.5 rounded-2xl border transition-all flex gap-3.5 active:scale-[0.98] ${n.isRead ? 'bg-white dark:bg-slate-900 border-slate-50 dark:border-slate-800 opacity-60' : 'bg-white dark:bg-slate-900 border-indigo-100 dark:border-indigo-900/50 shadow-md ring-1 ring-indigo-500/5'}`}>
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 ${n.isRead ? 'bg-slate-50 dark:bg-slate-800 text-slate-400' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none'}`}>{getIcon(n.type)}</div>
+              <button key={n.id} onClick={() => handleNotifClick(n.id)} className={`w-full text-left p-3.5 rounded-2xl border transition-all flex gap-3.5 active:scale-[0.98] ${n.isRead ? 'bg-white dark:bg-slate-900 border-slate-50 dark:border-slate-800 opacity-60' : n.type === NotificationType.PAYMENT_REMINDER ? 'bg-white dark:bg-slate-900 border-rose-200 dark:border-rose-900/30 shadow-md ring-1 ring-rose-500/5' : 'bg-white dark:bg-slate-900 border-indigo-100 dark:border-indigo-900/50 shadow-md ring-1 ring-indigo-500/5'}`}>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 ${n.isRead ? 'bg-slate-50 dark:bg-slate-800 text-slate-400' : n.type === NotificationType.PAYMENT_REMINDER ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'}`}>{getIcon(n.type)}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-start mb-1">
                     <h4 className="font-black text-slate-900 dark:text-slate-100 text-[11px] truncate leading-none">{n.title}</h4>
@@ -321,9 +330,4 @@ export const Notifications: React.FC<NotificationsProps> = ({
       </div>
     </div>
   );
-
-  function handleNotifClick(id: string) {
-    markAsRead(id);
-    setSelectedNotifId(id);
-  }
 };

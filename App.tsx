@@ -229,7 +229,7 @@ const App: React.FC = () => {
       case 'other':
         return <Other currentUser={actingUser} />;
       case 'admin':
-        return <AdminPanel currentUser={currentUser} onImpersonate={handleSwitchActingUser} addNotification={addNotification} />;
+        return <AdminPanel currentUser={currentUser} onImpersonate={handleSwitchActingUser} addNotification={addNotification} onCourseClick={(id) => setSelectedCourseId(id)} onUserClick={handleUserClick} />;
       case 'profile':
         return <Profile user={currentUser} isOwnProfile={true} theme={theme} onThemeToggle={toggleTheme} onLogout={handleLogout} currentUser={currentUser} onSwitchUser={handleSwitchActingUser} actingUserId={actingUserId} />;
       default:
