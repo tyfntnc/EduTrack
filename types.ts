@@ -11,7 +11,26 @@ export enum NotificationType {
   UPCOMING_CLASS = 'Ders Hatırlatıcısı',
   ATTENDANCE_UPDATE = 'Yoklama Güncellemesi',
   SYSTEM_MESSAGE = 'Sistem Mesajı',
-  ANNOUNCEMENT = 'Okul Duyurusu'
+  ANNOUNCEMENT = 'Okul Duyurusu',
+  PAYMENT_REMINDER = 'Ödeme Hatırlatması',
+  PAYMENT_CONFIRMED = 'Ödeme Onaylandı',
+  PAYMENT_REQUEST = 'Ödeme Onay Talebi'
+}
+
+export enum PaymentStatus {
+  PAID = 'Ödendi',
+  OVERDUE = 'Gecikti',
+  PENDING = 'Onay Bekliyor'
+}
+
+export interface PaymentRecord {
+  id: string;
+  studentId: string;
+  amount: number;
+  dueDate: string;
+  status: PaymentStatus;
+  method?: 'Credit Card' | 'Manual';
+  paidAt?: string;
 }
 
 export interface Notification {
@@ -57,7 +76,7 @@ export interface User {
   childIds?: string[];
   parentIds?: string[];
   bio?: string;
-  badges?: string[]; // Rozet ID'leri
+  badges?: string[];
 }
 
 export interface Course {
@@ -69,7 +88,7 @@ export interface Course {
   studentIds: string[];
   title: string;
   location?: string;
-  address?: string; // Yeni alan
+  address?: string;
   instructorNotes?: string;
   schedule: {
     day: number;

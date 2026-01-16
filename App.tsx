@@ -23,11 +23,8 @@ const App: React.FC = () => {
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
   
-  // App States
   const [isLoading, setIsLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  
-  // Her açılışta Landing (Splash) gösterilmesi için state true olarak başlatıldı
   const [showLanding, setShowLanding] = useState(true);
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -42,7 +39,6 @@ const App: React.FC = () => {
     (localStorage.getItem('theme') as 'lite' | 'dark') || 'lite'
   );
 
-  // Initial Data Fetching
   useEffect(() => {
     const initApp = async () => {
       const savedUserEmail = localStorage.getItem('userEmail');
@@ -91,7 +87,6 @@ const App: React.FC = () => {
 
   const handleLogin = (email: string) => {
     const foundUser = MOCK_USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
-    
     setIsTransitioning(true);
     setTimeout(() => {
       if (foundUser) {
@@ -162,10 +157,7 @@ const App: React.FC = () => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
   };
 
-  // Rendering logic
   if (isLoading) return <LoadingScreen />;
-  
-  // Önce Splash Screen (LandingPage) gösterilir (4 saniye)
   if (showLanding) {
     return (
       <>
@@ -175,44 +167,15 @@ const App: React.FC = () => {
     );
   }
 
-  // Splash bittikten sonra login durumu kontrol edilir
   if (!isAuthenticated) {
     const renderAuthView = () => {
       switch (authView) {
-        case 'login':
-          return (
-            <Login 
-              onLogin={handleLogin} 
-              onRegisterClick={() => setAuthView('register')} 
-              onForgotClick={() => setAuthView('forgot')} 
-              onBackToLanding={handleBackToLanding} 
-            />
-          );
-        case 'register':
-          return (
-            <Register 
-              onRegister={handleLogin} 
-              onBackToLogin={() => setAuthView('login')} 
-            />
-          );
-        case 'forgot':
-          return (
-            <ForgotPassword 
-              onBackToLogin={() => setAuthView('login')} 
-            />
-          );
-        default:
-          return (
-            <Login 
-              onLogin={handleLogin} 
-              onRegisterClick={() => setAuthView('register')} 
-              onForgotClick={() => setAuthView('forgot')} 
-              onBackToLanding={handleBackToLanding} 
-            />
-          );
+        case 'login': return <Login onLogin={handleLogin} onRegisterClick={() => setAuthView('register')} onForgotClick={() => setAuthView('forgot')} onBackToLanding={handleBackToLanding} />;
+        case 'register': return <Register onRegister={handleLogin} onBackToLogin={() => setAuthView('login')} />;
+        case 'forgot': return <ForgotPassword onBackToLogin={() => setAuthView('login')} />;
+        default: return <Login onLogin={handleLogin} onRegisterClick={() => setAuthView('register')} onForgotClick={() => setAuthView('forgot')} onBackToLanding={handleBackToLanding} />;
       }
     };
-
     return (
       <>
         {renderAuthView()}
@@ -221,7 +184,6 @@ const App: React.FC = () => {
     );
   }
 
-  // Ana uygulama içeriği
   if (!currentUser || !actingUserId) return <LoadingScreen />;
 
   const actingUser = MOCK_USERS.find(u => u.id === actingUserId) || currentUser;
@@ -247,6 +209,7 @@ const App: React.FC = () => {
             isSystemAdmin={currentUser.role === UserRole.SYSTEM_ADMIN}
             onImpersonate={handleSwitchActingUser}
             onTabChange={setActiveTab}
+            addNotification={addNotification}
           />
         );
       case 'courses':
@@ -266,11 +229,11 @@ const App: React.FC = () => {
       case 'other':
         return <Other currentUser={actingUser} />;
       case 'admin':
-        return <AdminPanel currentUser={currentUser} onImpersonate={handleSwitchActingUser} />;
+        return <AdminPanel currentUser={currentUser} onImpersonate={handleSwitchActingUser} addNotification={addNotification} />;
       case 'profile':
         return <Profile user={currentUser} isOwnProfile={true} theme={theme} onThemeToggle={toggleTheme} onLogout={handleLogout} currentUser={currentUser} onSwitchUser={handleSwitchActingUser} actingUserId={actingUserId} />;
       default:
-        return <Dashboard userRole={actingUser.role} userName={actingUser.name} currentUserId={actingUser.id} isSystemAdmin={currentUser.role === UserRole.SYSTEM_ADMIN} onImpersonate={handleSwitchActingUser} onTabChange={setActiveTab} />;
+        return <Dashboard userRole={actingUser.role} userName={actingUser.name} currentUserId={actingUser.id} isSystemAdmin={currentUser.role === UserRole.SYSTEM_ADMIN} onImpersonate={handleSwitchActingUser} onTabChange={setActiveTab} addNotification={addNotification} />;
     }
   };
 
@@ -286,12 +249,7 @@ const App: React.FC = () => {
             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
             <span className="text-[10px] font-black uppercase tracking-widest">Gözlem Modu: {actingUser.name}</span>
           </div>
-          <button 
-            onClick={() => handleSwitchActingUser(currentUser.id)}
-            className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-tight transition-colors"
-          >
-            Yöneticiye Dön
-          </button>
+          <button onClick={() => handleSwitchActingUser(currentUser.id)} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-tight transition-colors">Yöneticiye Dön</button>
         </div>
       )}
 

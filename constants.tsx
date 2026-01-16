@@ -1,5 +1,5 @@
 
-import { UserRole, Branch, Category, User, Course, Notification, NotificationType, Badge } from './types.ts';
+import { UserRole, Branch, Category, User, Course, Notification, NotificationType, Badge, PaymentRecord, PaymentStatus } from './types.ts';
 
 export const INITIAL_BRANCHES: Branch[] = [
   { id: 'b1', name: 'Futbol' },
@@ -14,6 +14,12 @@ export const INITIAL_CATEGORIES: Category[] = [
   { id: 'c2', name: 'U15' },
   { id: 'c3', name: 'Özel Ders' },
   { id: 'c4', name: 'Grup' }
+];
+
+export const MOCK_PAYMENTS: PaymentRecord[] = [
+  { id: 'pay1', studentId: 'u2', amount: 1500, dueDate: '2024-06-01', status: PaymentStatus.OVERDUE },
+  { id: 'pay2', studentId: 'u9', amount: 1200, dueDate: '2024-06-15', status: PaymentStatus.PAID, paidAt: '2024-06-10', method: 'Credit Card' },
+  { id: 'pay3', studentId: 'u2', amount: 1500, dueDate: '2024-07-01', status: PaymentStatus.PENDING, method: 'Manual' }
 ];
 
 export const SYSTEM_BADGES: Badge[] = [
@@ -83,7 +89,7 @@ export const MOCK_COURSES: Course[] = [
   {
     id: 'crs1', schoolId: 'school-a', branchId: 'b1', categoryId: 'c1', teacherId: 'u1', studentIds: ['u2', 'u9'], title: 'U19 Futbol Elit',
     location: 'A Sahası',
-    address: '41.0082, 28.9784', // İstanbul Sultanahmet koordinatları
+    address: '41.0082, 28.9784',
     instructorNotes: 'Lütfen antrenmana 15 dakika erken gelerek ısınma hareketlerine başlayın. Krampon kontrolü yapılacak.',
     schedule: [{ day: today, startTime: '16:00', endTime: '18:00' }, { day: 1, startTime: '16:00', endTime: '18:00' }]
   },
@@ -93,13 +99,6 @@ export const MOCK_COURSES: Course[] = [
     address: 'Ankara, Çankaya',
     instructorNotes: 'Geçen haftaki problem setini yanınızda getirmeyi unutmayın. Türev konusuna giriş yapacağız.',
     schedule: [{ day: today, startTime: '18:30', endTime: '20:00' }, { day: 2, startTime: '18:30', endTime: '20:00' }]
-  },
-  {
-    id: 'crs3', schoolId: 'school-a', branchId: 'b2', categoryId: 'c2', teacherId: 'u1', studentIds: ['u2'], title: 'U15 Basketbol Teknik',
-    location: 'Kapalı Spor Salonu',
-    address: '39.9334, 32.8597', // Ankara Ulus koordinatları
-    instructorNotes: 'Dizlik ve bileklik kullanımı zorunludur. Su şişenizi yanınızda bulundurun.',
-    schedule: [{ day: today, startTime: '14:00', endTime: '15:30' }, { day: 6, startTime: '10:00', endTime: '12:00' }]
   }
 ];
 
