@@ -23,9 +23,20 @@ export enum PaymentStatus {
   PENDING = 'Onay Bekliyor'
 }
 
+export interface IndividualLesson {
+  id: string;
+  title: string;
+  description: string;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:mm
+  role: 'taken' | 'given';
+  students: { name: string; email: string; }[];
+}
+
 export interface PaymentRecord {
   id: string;
   studentId: string;
+  courseId?: string; // Hangi kurs için yapıldığı
   amount: number;
   dueDate: string;
   status: PaymentStatus;

@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { MOCK_USERS, SYSTEM_BADGES } from '../constants';
+import { SYSTEM_BADGES } from '../constants';
 import { Badge, User } from '../types';
 
 interface OtherProps {
@@ -8,158 +8,128 @@ interface OtherProps {
 }
 
 export const Other: React.FC<OtherProps> = ({ currentUser }) => {
-  const [showAllBadges, setShowAllBadges] = useState(false);
+  const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
   
-  // Profil Tamamlanma Hesaplama
   const profileCompletion = useMemo(() => {
     const fields = [
       { key: 'name', label: 'Ad Soyad', check: (val: string) => val && val.trim().split(' ').length >= 2 },
       { key: 'email', label: 'E-Posta', check: (val: string) => !!val },
-      { key: 'phoneNumber', label: 'Telefon', check: (val: string) => val && val !== '05550000000' && val.length > 5 },
-      { key: 'avatar', label: 'Profil Fotoğrafı', check: (val: string) => !!val },
-      { key: 'birthDate', label: 'Doğum Tarihi', check: (val: string) => !!val },
+      { key: 'phoneNumber', label: 'Telefon', check: (val: string) => val && val.length > 5 },
+      { key: 'avatar', label: 'Foto', check: (val: string) => !!val },
+      { key: 'birthDate', label: 'Doğum', check: (val: string) => !!val },
       { key: 'gender', label: 'Cinsiyet', check: (val: string) => val && val !== 'Belirtilmedi' },
       { key: 'address', label: 'Adres', check: (val: string) => !!val },
-      { key: 'bio', label: 'Biyografi', check: (val: string) => !!val }
+      { key: 'bio', label: 'Bio', check: (val: string) => !!val }
     ];
-
     const completed = fields.filter(f => f.check((currentUser as any)[f.key]));
-    const percentage = Math.round((completed.length / fields.length) * 100);
-    
-    return { percentage, completedCount: completed.length, totalCount: fields.length, fields };
+    return { percentage: Math.round((completed.length / fields.length) * 100), completedCount: completed.length, totalCount: fields.length, fields };
   }, [currentUser]);
 
-  const userBadgeIds = currentUser?.badges || [];
-  const earnedBadges = SYSTEM_BADGES.filter(b => userBadgeIds.includes(b.id));
-  const unearnedBadges = SYSTEM_BADGES.filter(b => !userBadgeIds.includes(b.id));
+  const earnedBadges = SYSTEM_BADGES.filter(b => (currentUser?.badges || []).includes(b.id));
+  const unearnedBadges = SYSTEM_BADGES.filter(b => !(currentUser?.badges || []).includes(b.id));
 
-  const attendanceCountThisMonth = 14;
-  const attendancePercentage = 92;
-
-  const BadgeItem: React.FC<{ badge: Badge, isEarned: boolean }> = ({ badge, isEarned }) => (
-    <div className={`bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-3 shadow-sm transition-all ${!isEarned ? 'opacity-50 grayscale' : 'opacity-100'}`}>
-      <div className={`w-8 h-8 bg-gradient-to-br ${badge.color} rounded-xl flex items-center justify-center text-lg shadow-md shrink-0`}>
-        {badge.icon}
+  const BadgeItem: React.FC<{ badge: Badge, isEarned: boolean, compact?: boolean }> = ({ badge, isEarned, compact }) => (
+    <div className={`bg-white/70 dark:bg-slate-900/40 backdrop-blur-md p-3 rounded-[1.5rem] border border-white/20 dark:border-slate-800 flex items-center gap-3 shadow-sm ${!isEarned ? 'opacity-30 grayscale' : 'opacity-100'}`}>
+      <div className={`w-9 h-9 bg-gradient-to-br ${badge.color} rounded-xl flex items-center justify-center text-sm shrink-0 border border-white/20`}>{badge.icon}</div>
+      <div className="flex-1 min-w-0 text-left">
+        <h4 className="text-[9px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight leading-none mb-1">{badge.name}</h4>
+        <p className={`text-[7px] font-bold text-slate-400 leading-tight uppercase ${compact ? 'truncate' : ''}`}>{badge.description}</p>
       </div>
-      <div className="flex-1 min-w-0">
-        <h4 className="text-[9px] font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight leading-none mb-1">{badge.name}</h4>
-        <p className="text-[7px] font-medium text-slate-400 leading-tight truncate">{badge.description}</p>
-      </div>
-      {!isEarned && (
-        <div className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md">
-          <span className="text-[6px] font-black text-slate-400 uppercase">Kilitli</span>
-        </div>
-      )}
     </div>
   );
 
   return (
-    <div className="space-y-4 animate-in fade-in duration-700 pb-28 px-4 pt-1 transition-all overflow-hidden">
-      
-      {/* 1. PROFİL TAMAMLANMA GRAFİĞİ */}
-      <section className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 rounded-[2.5rem] shadow-sm">
-        <div className="flex items-center gap-5">
-          <div className="relative w-20 h-20 shrink-0">
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="42" stroke="currentColor" strokeWidth="10" fill="transparent" className="text-slate-100 dark:text-slate-800" />
-              <circle 
-                cx="50" cy="50" r="42" stroke="currentColor" strokeWidth="10" fill="transparent" 
-                strokeDasharray={`${profileCompletion.percentage * 2.64} 264`}
-                className="text-indigo-600 dark:text-indigo-400 transition-all duration-1000 ease-out" 
-                strokeLinecap="round"
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-sm font-black text-slate-900 dark:text-slate-100">%{profileCompletion.percentage}</span>
-              <span className="text-[5px] font-black text-slate-400 uppercase tracking-widest">GÜCÜ</span>
-            </div>
+    <div className="w-full page-transition px-4 space-y-3 pt-3 pb-24 overflow-hidden transition-all text-left h-full">
+      {/* --- COMPACT PROFILE COMPLETION --- */}
+      <section className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border border-white/20 dark:border-slate-800 p-4 rounded-[2rem] shadow-sm flex items-center gap-4">
+        <div className="relative w-16 h-16 shrink-0">
+          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="44" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-slate-100 dark:text-slate-800" />
+            <circle cx="50" cy="50" r="44" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray={`${profileCompletion.percentage * 2.76} 276`} className="text-indigo-600 transition-all duration-1000" strokeLinecap="round" />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-xs font-black text-slate-800 dark:text-slate-100">%{profileCompletion.percentage}</span>
           </div>
-          <div className="flex-1 space-y-2">
-            <div>
-              <h3 className="text-[10px] font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">PROFİL TAMAMLANMA</h3>
-              <p className="text-[7px] font-bold text-slate-400 uppercase tracking-wide mt-1">
-                {profileCompletion.completedCount}/{profileCompletion.totalCount} Bilgi Girildi
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-1">
-              {profileCompletion.fields.map(f => (
-                <div key={f.key} className={`w-1.5 h-1.5 rounded-full ${f.check((currentUser as any)[f.key]) ? 'bg-indigo-500' : 'bg-slate-100 dark:bg-slate-800'}`}></div>
-              ))}
-            </div>
-            {profileCompletion.percentage < 100 && (
-              <p className="text-[7px] font-black text-indigo-500 uppercase tracking-widest animate-pulse mt-1">HESABINI GÜÇLENDİR!</p>
-            )}
+        </div>
+        <div className="flex-1 space-y-2">
+          <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-widest">PROFİL GÜCÜ</h3>
+          <div className="flex flex-wrap gap-1">
+            {profileCompletion.fields.map(f => (
+              <div key={f.key} className={`w-1.5 h-1.5 rounded-full ${f.check((currentUser as any)[f.key]) ? 'bg-indigo-500' : 'bg-slate-100 dark:bg-slate-800'}`}></div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* 2. SUCCESS METRICS */}
+      {/* --- COMPACT SUCCESS METRICS --- */}
       <section className="grid grid-cols-2 gap-2">
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col justify-center">
-          <span className="text-[6px] font-black text-slate-400 uppercase tracking-widest mb-1">AYLIK KATILIM</span>
+        <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-md p-4 rounded-[1.8rem] border border-white/20 dark:border-slate-800 flex flex-col justify-center">
+          <span className="text-[6px] font-black text-slate-400 uppercase tracking-widest mb-1">BU AY</span>
           <div className="flex items-baseline gap-1">
-            <span className="text-xl font-black text-slate-900 dark:text-slate-100">{attendanceCountThisMonth}</span>
-            <span className="text-[7px] font-bold text-slate-400 uppercase">DERS</span>
+            <span className="text-xl font-black text-slate-800 dark:text-slate-100">14</span>
+            <span className="text-[7px] font-black text-indigo-500 uppercase">DERS</span>
           </div>
         </div>
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col justify-center text-center">
-          <span className="text-[6px] font-black text-slate-400 uppercase tracking-widest mb-1">GENEL BAŞARI</span>
-          <span className="text-xl font-black text-indigo-600 dark:text-indigo-400">%{attendancePercentage}</span>
+        <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-md p-4 rounded-[1.8rem] border border-white/20 dark:border-slate-800 flex flex-col items-center justify-center">
+          <span className="text-[6px] font-black text-slate-400 uppercase tracking-widest mb-1">BAŞARI</span>
+          <div className="text-xl font-black text-emerald-500">%92</div>
         </div>
       </section>
 
-      {/* 3. ROZETLER */}
+      {/* --- ROZETLER (Compact Preview) --- */}
       <div className="space-y-2">
         <div className="flex justify-between items-center px-1">
-           <h3 className="text-[7px] font-black text-slate-400 uppercase tracking-widest">BAŞARI ROZETLERİ</h3>
-           <button 
-             onClick={() => setShowAllBadges(true)}
-             className="text-[6.5px] font-black text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-1 rounded-lg uppercase"
-           >
-             Tümünü Gör
-           </button>
+           <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-widest">ROZETLER</h3>
+           <button onClick={() => setIsBadgeModalOpen(true)} className="text-[7px] font-black text-indigo-600 uppercase tracking-widest">TÜMÜNÜ GÖR</button>
         </div>
         <div className="space-y-1.5">
-          {earnedBadges.slice(0, 3).map((badge) => (
-            <BadgeItem key={badge.id} badge={badge} isEarned={true} />
-          ))}
-          {earnedBadges.length < 3 && unearnedBadges.slice(0, 3 - earnedBadges.length).map((badge) => (
-            <BadgeItem key={badge.id} badge={badge} isEarned={false} />
-          ))}
+          {earnedBadges.slice(0, 3).map((badge) => <BadgeItem key={badge.id} badge={badge} isEarned={true} compact={true} />)}
+          {earnedBadges.length === 0 && (
+             <div className="text-center py-4 opacity-30 font-black text-[7px] uppercase tracking-widest">Henüz rozet kazanılmadı</div>
+          )}
         </div>
       </div>
 
-      {/* 4. AI ANALİZ */}
-      <section className="bg-slate-950 dark:bg-indigo-600 rounded-[2.5rem] p-5 text-white shadow-xl space-y-3">
-        <h3 className="text-[8px] font-black uppercase tracking-[0.2em] text-indigo-400 dark:text-indigo-100">GELİŞİM ANALİZİ</h3>
-        <div className="space-y-3">
-          {[{ label: 'TEKNİK BECERİ', val: 88, c: 'bg-fuchsia-400' }, { label: 'DİSİPLİN PUANI', val: 96, c: 'bg-amber-400' }].map(s => (
-            <div key={s.label} className="space-y-1.5">
-              <div className="flex justify-between text-[7px] font-black uppercase tracking-wider"><span className="opacity-60">{s.label}</span><span>%{s.val}</span></div>
-              <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden"><div className={`h-full ${s.c} shadow-[0_0_10px_rgba(255,255,255,0.3)]`} style={{ width: `${s.val}%` }}></div></div>
+      {/* --- ROZETLER MODAL --- */}
+      {isBadgeModalOpen && (
+        <div className="fixed inset-0 z-[1000] bg-slate-50 dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom-6 duration-500">
+          <header className="px-6 py-5 border-b border-slate-100 dark:border-slate-900 flex justify-between items-center sticky top-0 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md z-10">
+            <div className="text-left">
+              <h2 className="text-lg font-black text-slate-900 dark:text-slate-100 uppercase tracking-tighter">ROZET KOLEKSİYONU</h2>
+              <p className="text-[7px] font-black text-indigo-500 uppercase tracking-[0.3em] mt-1">BAŞARI VE HEDEFLER</p>
             </div>
-          ))}
-        </div>
-      </section>
+            <button onClick={() => setIsBadgeModalOpen(false)} className="w-9 h-9 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-slate-400 border border-slate-100 dark:border-slate-800">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </header>
 
-      {/* TÜM ROZETLER MODAL */}
-      {showAllBadges && (
-        <div className="fixed inset-0 z-[600] flex items-center justify-center px-6">
-          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={() => setShowAllBadges(false)} />
-          <div className="bg-white dark:bg-slate-900 w-full max-w-[320px] max-h-[70vh] rounded-[2.5rem] p-6 relative z-10 shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col animate-in zoom-in-95 duration-300">
-            <header className="flex justify-between items-center mb-4 shrink-0">
-              <h3 className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">TÜM BAŞARIMLAR</h3>
-              <button onClick={() => setShowAllBadges(false)} className="w-8 h-8 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              </button>
-            </header>
-            <div className="flex-1 overflow-y-auto no-scrollbar space-y-2 pr-1">
-              <p className="text-[7px] font-black text-indigo-500 uppercase tracking-widest mb-1">KAZANDIKLARIN ({earnedBadges.length})</p>
-              {earnedBadges.map(b => <BadgeItem key={b.id} badge={b} isEarned={true} />)}
-              
-              <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mt-4 mb-1">YOLDAKİLER ({unearnedBadges.length})</p>
-              {unearnedBadges.map(b => <BadgeItem key={b.id} badge={b} isEarned={false} />)}
-            </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar">
+            {/* KAZANILANLAR */}
+            <section className="space-y-3">
+              <div className="flex items-center gap-2 px-1">
+                <span className="w-1 h-3 bg-emerald-500 rounded-full"></span>
+                <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-widest">KAZANILANLAR ({earnedBadges.length})</h3>
+              </div>
+              <div className="space-y-2">
+                {earnedBadges.map(badge => <BadgeItem key={badge.id} badge={badge} isEarned={true} />)}
+                {earnedBadges.length === 0 && <p className="text-[7px] font-bold text-slate-300 uppercase tracking-widest text-center py-4">Henüz rozetin yok, hemen başla!</p>}
+              </div>
+            </section>
+
+            {/* KAZANILABİLECEKLER */}
+            <section className="space-y-3">
+              <div className="flex items-center gap-2 px-1">
+                <span className="w-1 h-3 bg-slate-300 rounded-full"></span>
+                <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-widest">KAZANILABİLECEKLER ({unearnedBadges.length})</h3>
+              </div>
+              <div className="space-y-2">
+                {unearnedBadges.map(badge => <BadgeItem key={badge.id} badge={badge} isEarned={false} />)}
+              </div>
+            </section>
+          </div>
+
+          <div className="p-4 pb-8 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-t border-slate-100 dark:border-slate-900">
+             <button onClick={() => setIsBadgeModalOpen(false)} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-[9px] uppercase tracking-widest shadow-xl active:scale-95 transition-all">KOLEKSİYONA DÖN</button>
           </div>
         </div>
       )}

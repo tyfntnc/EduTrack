@@ -17,9 +17,10 @@ export const INITIAL_CATEGORIES: Category[] = [
 ];
 
 export const MOCK_PAYMENTS: PaymentRecord[] = [
-  { id: 'pay1', studentId: 'u2', amount: 1500, dueDate: '2024-06-01', status: PaymentStatus.OVERDUE },
-  { id: 'pay2', studentId: 'u9', amount: 1200, dueDate: '2024-06-15', status: PaymentStatus.PAID, paidAt: '2024-06-10', method: 'Credit Card' },
-  { id: 'pay3', studentId: 'u2', amount: 1500, dueDate: '2024-07-01', status: PaymentStatus.PENDING, method: 'Manual' }
+  { id: 'pay1', studentId: 'u2', courseId: 'crs1', amount: 1500, dueDate: '2024-05-01', status: PaymentStatus.OVERDUE },
+  { id: 'pay2', studentId: 'u2', courseId: 'crs2', amount: 1200, dueDate: '2024-06-15', status: PaymentStatus.PAID, paidAt: '2024-06-10', method: 'Credit Card' },
+  { id: 'pay3', studentId: 'u2', courseId: 'crs1', amount: 1500, dueDate: '2024-07-01', status: PaymentStatus.PENDING, method: 'Manual' },
+  { id: 'pay4', studentId: 'u9', courseId: 'crs1', amount: 1500, dueDate: '2024-06-01', status: PaymentStatus.PAID, paidAt: '2024-05-28', method: 'Manual' }
 ];
 
 export const SYSTEM_BADGES: Badge[] = [

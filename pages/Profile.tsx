@@ -1,7 +1,6 @@
 
 import React, { useState, useRef } from 'react';
 import { User, UserRole } from '../types';
-import { MOCK_USERS } from '../constants';
 
 interface ProfileProps {
   user: User;
@@ -13,6 +12,8 @@ interface ProfileProps {
   currentUser: User;
   onSwitchUser: (userId: string) => void;
   actingUserId: string;
+  allUsers: User[];
+  onUserClick?: (userId: string) => void;
 }
 
 const Modal = ({ title, onClose, children }: { title: string, onClose: () => void, children?: React.ReactNode }) => (
@@ -32,11 +33,14 @@ const Modal = ({ title, onClose, children }: { title: string, onClose: () => voi
 
 export const Profile: React.FC<ProfileProps> = ({ 
   user, onBack, isOwnProfile = false, theme = 'lite', 
-  onThemeToggle, onLogout, currentUser, onSwitchUser, actingUserId 
+  onThemeToggle, onLogout, currentUser, onSwitchUser, actingUserId, allUsers, onUserClick
 }) => {
   const [activeModal, setActiveModal] = useState<'none' | 'edit' | 'security' | 'photo'>('none');
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // Gözlem modu sadece Sistem Admin tarafından yapılabilir
+  const isSystemAdmin = currentUser.role === UserRole.SYSTEM_ADMIN;
+
   const [formData, setFormData] = useState({ 
     name: user.name, 
     email: user.email || '',
@@ -49,8 +53,8 @@ export const Profile: React.FC<ProfileProps> = ({
   
   const [tempAvatar, setTempAvatar] = useState(user.avatar || '');
 
-  // Tüm kullanıcılar için aile üyelerini getir (Rol bağımsız)
-  const connectedUsers = MOCK_USERS.filter(u => {
+  // Aile üyelerini dinamik olarak bul
+  const connectedUsers = allUsers.filter(u => {
     const isChild = user.childIds?.includes(u.id);
     const isParent = user.parentIds?.includes(u.id);
     return isChild || isParent;
@@ -62,6 +66,16 @@ export const Profile: React.FC<ProfileProps> = ({
       const reader = new FileReader();
       reader.onloadend = () => setTempAvatar(reader.result as string);
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFamilyClick = (connected: User) => {
+    if (isSystemAdmin) {
+      // Sadece Sistem Admin ise Gözlem Moduna (actingUserId değişimi) geç
+      onSwitchUser?.(connected.id);
+    } else {
+      // Diğer tüm kullanıcılar için sadece o bireyin profil detaylarını aç
+      onUserClick?.(connected.id);
     }
   };
 
@@ -104,26 +118,32 @@ export const Profile: React.FC<ProfileProps> = ({
           </section>
         )}
 
-        {/* EVRENSEL AİLEM BÖLÜMÜ */}
+        {/* AİLEM BÖLÜMÜ */}
         {connectedUsers.length > 0 && (
           <section className="space-y-3 mb-6 animate-in slide-in-from-bottom-2">
              <h3 className="text-[7px] font-black text-slate-400 uppercase tracking-widest px-1">AİLEM</h3>
              <div className="grid grid-cols-2 gap-2">
-              {connectedUsers.map((connected) => (
-                <button 
-                  key={connected.id} 
-                  onClick={() => onSwitchUser?.(connected.id)} 
-                  className={`relative p-2.5 rounded-2xl border transition-all flex items-center gap-3 ${actingUserId === connected.id ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 shadow-md ring-1 ring-indigo-500/10' : 'bg-white dark:bg-slate-900 border-slate-100 opacity-60'}`}
-                >
-                  <div className="w-8 h-8 rounded-xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-800">
-                    <img src={connected.avatar} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="text-left min-w-0">
-                    <p className="text-[9px] font-black text-slate-800 dark:text-slate-100 truncate leading-none uppercase">{connected.name.split(' ')[0]}</p>
-                    <p className="text-[6px] font-bold text-indigo-500 uppercase tracking-tighter mt-1">{connected.role}</p>
-                  </div>
-                </button>
-              ))}
+              {connectedUsers.map((connected) => {
+                const isObserved = actingUserId === connected.id;
+                return (
+                  <button 
+                    key={connected.id} 
+                    onClick={() => handleFamilyClick(connected)} 
+                    className={`relative p-2.5 rounded-2xl border transition-all flex items-center gap-3 ${isObserved && isSystemAdmin ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 shadow-md ring-1 ring-indigo-500/10' : 'bg-white dark:bg-slate-900 border-slate-100 opacity-60'}`}
+                  >
+                    <div className="w-8 h-8 rounded-xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-800">
+                      <img src={connected.avatar} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="text-left min-w-0">
+                      <p className="text-[9px] font-black text-slate-800 dark:text-slate-100 truncate leading-none uppercase">{connected.name.split(' ')[0]}</p>
+                      <p className="text-[6px] font-bold text-indigo-500 uppercase tracking-tighter mt-1">{connected.role}</p>
+                    </div>
+                    {isObserved && isSystemAdmin && (
+                       <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-500/50"></div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </section>
         )}
@@ -150,7 +170,6 @@ export const Profile: React.FC<ProfileProps> = ({
 
       </div>
 
-      {/* SABİT OTURUMU KAPAT BUTONU */}
       {isOwnProfile && (
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-full max-w-md p-4 bg-white/60 dark:bg-slate-950/60 backdrop-blur-2xl border-t border-slate-50 dark:border-slate-900 z-50">
           <button 
