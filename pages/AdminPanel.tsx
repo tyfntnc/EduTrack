@@ -46,6 +46,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onImpersona
   const filteredUsers = users.filter(u => u.schoolId === selectedSchoolId);
   const filteredCourses = courses.filter(c => c.schoolId === selectedSchoolId);
 
+  // Kullanıcıları rollerine göre grupla (Genel liste için)
+  const groupedFilteredUsers = useMemo(() => {
+    return {
+      admins: filteredUsers.filter(u => u.role === UserRole.SCHOOL_ADMIN || u.role === UserRole.SYSTEM_ADMIN),
+      teachers: filteredUsers.filter(u => u.role === UserRole.TEACHER),
+      students: filteredUsers.filter(u => u.role === UserRole.STUDENT)
+    };
+  }, [filteredUsers]);
+
   // Handlers
   const handleSaveSchool = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -133,6 +142,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onImpersona
   };
 
   // Render Helpers
+  const renderUserCard = (u: User) => (
+    <div key={u.id} className="bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-50 dark:border-slate-800 shadow-sm flex items-center gap-3 animate-in fade-in duration-300">
+      <div className="w-9 h-9 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800 shrink-0">
+        <img src={u.avatar} className="w-full h-full object-cover" alt="" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <h4 className="text-[10px] font-bold text-slate-800 dark:text-slate-100 truncate">{u.name}</h4>
+        <p className="text-[6px] font-black text-slate-400 uppercase tracking-tighter">{u.email}</p>
+      </div>
+      <div className="flex gap-1.5 shrink-0">
+        <a href={`tel:${u.phoneNumber}`} className="w-7 h-7 bg-slate-50 dark:bg-slate-800 rounded-lg flex items-center justify-center text-slate-400 active:scale-90">
+           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+        </a>
+        <a href={`https://wa.me/${u.phoneNumber?.replace(/\s/g, '')}`} className="w-7 h-7 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center text-emerald-500 active:scale-90">
+           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-11.7 8.38 8.38 0 0 1 3.8.9L21 3z"></path></svg>
+        </a>
+      </div>
+    </div>
+  );
+
   const renderSchoolDetail = () => {
     const school = schools.find(s => s.id === detailSchoolId);
     if (!school) return null;
@@ -173,25 +202,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onImpersona
               <div key={group.title} className="space-y-2">
                 <h3 className={`text-[7px] font-black ${group.color} uppercase tracking-widest px-1`}>{group.title}</h3>
                 <div className="space-y-1.5">
-                  {group.data.map(u => (
-                    <div key={u.id} className="bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-50 dark:border-slate-800 shadow-sm flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800 shrink-0">
-                        <img src={u.avatar} className="w-full h-full object-cover" alt="" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-[10px] font-bold text-slate-800 dark:text-slate-100 truncate">{u.name}</h4>
-                        <p className="text-[6px] font-black text-slate-400 uppercase tracking-tighter">{u.email}</p>
-                      </div>
-                      <div className="flex gap-1.5 shrink-0">
-                        <a href={`tel:${u.phoneNumber}`} className="w-7 h-7 bg-slate-50 dark:bg-slate-800 rounded-lg flex items-center justify-center text-slate-400 active:scale-90">
-                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                        </a>
-                        <a href={`https://wa.me/${u.phoneNumber?.replace(/\s/g, '')}`} className="w-7 h-7 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center text-emerald-500 active:scale-90">
-                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-11.7 8.38 8.38 0 0 1 3.8.9L21 3z"></path></svg>
-                        </a>
-                      </div>
-                    </div>
-                  ))}
+                  {group.data.map(u => renderUserCard(u))}
                 </div>
               </div>
             ))}
@@ -301,17 +312,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onImpersona
                 </div>
               ))
             ) : (
-              filteredUsers.map(user => (
-                <div key={user.id} className="p-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800 shrink-0">
-                    <img src={user.avatar} className="w-full h-full object-cover" />
+              <div className="space-y-6">
+                {[
+                  { title: 'YÖNETİCİLER', data: groupedFilteredUsers.admins, color: 'text-indigo-600' },
+                  { title: 'ANTRENÖRLER', data: groupedFilteredUsers.teachers, color: 'text-blue-600' },
+                  { title: 'ÖĞRENCİLER', data: groupedFilteredUsers.students, color: 'text-emerald-600' }
+                ].map(group => group.data.length > 0 && (
+                  <div key={group.title} className="space-y-2">
+                    <h3 className={`text-[7px] font-black ${group.color} uppercase tracking-widest px-1`}>{group.title}</h3>
+                    <div className="space-y-1.5">
+                      {group.data.map(user => renderUserCard(user))}
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-[11px] font-bold text-slate-800 dark:text-slate-100 truncate">{user.name}</h4>
-                    <span className={`text-[6px] font-black px-1.5 py-0.5 rounded-md uppercase ${user.role === UserRole.TEACHER ? 'bg-blue-50 text-blue-600' : user.role === UserRole.SCHOOL_ADMIN ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'}`}>{user.role}</span>
-                  </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         </div>
