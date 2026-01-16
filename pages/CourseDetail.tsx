@@ -13,11 +13,6 @@ interface CourseDetailProps {
 
 export const CourseDetail: React.FC<CourseDetailProps> = ({ courseId, onBack, currentUser, onUserClick }) => {
   const [viewMode, setViewMode] = useState<'info' | 'manual-attendance' | 'qr-attendance'>('info');
-  const [isMapLoading, setIsMapLoading] = useState(false);
-  const [showMapPopup, setShowMapPopup] = useState(false);
-  const [mapUrl, setMapUrl] = useState<string>('');
-  
-  // Fix: Added missing attendance state
   const [attendanceList, setAttendanceList] = useState<Record<string, boolean>>({});
   
   const course = MOCK_COURSES.find(c => c.id === courseId);
@@ -31,22 +26,9 @@ export const CourseDetail: React.FC<CourseDetailProps> = ({ courseId, onBack, cu
   // Koordinat tespiti (Regex ile)
   const isCoord = course.address ? MapService.isCoordinates(course.address) : false;
 
-  const handleLocationClick = async () => {
-    // Eğer adres alanında koordinat varsa önceliğimiz odur, yoksa birleşik metin araması yapılır.
-    const searchTarget = isCoord ? course.address! : (course.address ? `${course.location}, ${course.address}` : (course.location || ''));
-    if (!searchTarget) return;
-
-    setIsMapLoading(true);
-    setShowMapPopup(true);
-    try {
-      const url = await MapService.getGroundedMapUrl(searchTarget);
-      setMapUrl(url);
-    } catch (error) {
-      console.error("Harita verisi alınamadı", error);
-      setMapUrl(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(searchTarget)}`);
-    } finally {
-      setIsMapLoading(false);
-    }
+  const handleLocationClick = () => {
+    const url = MapService.getMapsSearchUrl(course.location || '', course.address);
+    window.open(url, '_blank');
   };
 
   const saveAttendance = () => {
@@ -185,7 +167,7 @@ export const CourseDetail: React.FC<CourseDetailProps> = ({ courseId, onBack, cu
             {course.location || 'Konum Bilgisi Yok'}
           </p>
           <p className="text-[6px] font-medium text-slate-400 truncate opacity-70">
-            {isCoord ? 'Koordinat ile işaretli' : (course.address || 'Adres Kayıtlı Değil')}
+            {isCoord ? 'Koordinat ile işaretli' : (course.address || 'Haritada Gör')}
           </p>
         </button>
       </section>
@@ -256,55 +238,6 @@ export const CourseDetail: React.FC<CourseDetailProps> = ({ courseId, onBack, cu
           })}
         </div>
       </div>
-
-      {showMapPopup && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-5 animate-in fade-in duration-300">
-          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={() => setShowMapPopup(false)} />
-          <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2.5rem] overflow-hidden relative z-10 shadow-2xl border border-white/10 flex flex-col animate-in zoom-in-95 duration-500">
-            <header className="p-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
-               <div>
-                  <h3 className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">{course.title}</h3>
-                  <p className="text-[7px] font-black text-indigo-500 uppercase tracking-widest mt-1">{course.location || 'Konum Bilgisi'}</p>
-               </div>
-               <button onClick={() => setShowMapPopup(false)} className="w-8 h-8 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-slate-400 active:scale-90 transition-all">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-               </button>
-            </header>
-
-            <div className="flex-1 bg-slate-50 dark:bg-slate-950 min-h-[300px] relative">
-              {isMapLoading ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                   <div className="w-12 h-12 bg-indigo-600/10 rounded-2xl flex items-center justify-center text-indigo-600 animate-pulse">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                   </div>
-                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">Konum Verisi İşleniyor...</p>
-                </div>
-              ) : (
-                <iframe 
-                  title="Location Map"
-                  className="w-full h-full border-none"
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent(isCoord ? course.address! : `${course.location}, ${course.address || ''}`)}${isCoord ? '&z=17' : ''}&output=embed`}
-                  loading="lazy"
-                  allowFullScreen
-                ></iframe>
-              )}
-            </div>
-
-            <footer className="p-5 bg-white dark:bg-slate-900 shrink-0 space-y-3 border-t border-slate-100 dark:border-slate-800">
-               <button 
-                 onClick={() => window.open(mapUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(isCoord ? course.address! : `${course.location}, ${course.address || ''}`)}`, '_blank')}
-                 className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-[9px] uppercase tracking-[0.2em] shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95 transition-all flex items-center justify-center gap-2"
-               >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
-                  Yol Tarifi Al
-               </button>
-               <button onClick={() => setShowMapPopup(false)} className="w-full py-3 text-slate-400 text-[8px] font-black uppercase tracking-widest active:opacity-60">
-                 Vazgeç
-               </button>
-            </footer>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -10,12 +10,8 @@ export default defineConfig({
         'react',
         'react-dom',
         'react-dom/client',
-        'react/jsx-runtime',
-        '@google/genai'
+        'react/jsx-runtime'
       ],
     },
-  },
-  optimizeDeps: {
-    exclude: ['@google/genai']
   }
 });
