@@ -34,7 +34,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [activeModal, setActiveModal] = useState<'none' | 'activity' | 'goal-form'>('none');
   const [localPayments, setLocalPayments] = useState<PaymentRecord[]>(MOCK_PAYMENTS);
   
-  // Hedefler State'i
+  // Hedefler ve Sayfalama State'i
   const [localGoals, setLocalGoals] = useState<Goal[]>([
     {
       id: 'g1',
@@ -54,8 +54,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
         { id: 't4', text: 'Matematik ödevlerini bitir', isCompleted: true },
         { id: 't5', text: 'Günde 20 sayfa kitap oku', isCompleted: true }
       ]
+    },
+    {
+      id: 'g3',
+      title: 'Beslenme Düzeni',
+      category: 'personal',
+      tasks: [
+        { id: 't6', text: 'Fast food tüketme', isCompleted: false },
+        { id: 't7', text: 'Protein ağırlıklı beslen', isCompleted: true }
+      ]
     }
   ]);
+
+  const [expandedGoalIds, setExpandedGoalIds] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 3;
 
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [newTaskTexts, setNewTaskTexts] = useState<Record<string, string>>({});
@@ -98,6 +111,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setIsPaymentModalOpen(false);
   };
 
+  const handleToggleGoalExpand = (id: string) => {
+    setExpandedGoalIds(prev => 
+      prev.includes(id) ? prev.filter(gid => gid !== id) : [...prev, id]
+    );
+  };
+
   const handleToggleTask = (goalId: string, taskId: string) => {
     setLocalGoals(prev => prev.map(g => {
       if (g.id !== goalId) return g;
@@ -117,9 +136,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
       category: 'personal',
       tasks: []
     };
-    setLocalGoals([...localGoals, newGoal]);
+    setLocalGoals([newGoal, ...localGoals]);
     setNewGoalTitle('');
     setActiveModal('none');
+    setCurrentPage(1); // Yeni eklenince başa dön
   };
 
   const handleAddTask = (goalId: string) => {
@@ -141,6 +161,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
     return Math.round((completed / tasks.length) * 100);
   };
 
+  // Pagination Logic
+  const totalPages = Math.ceil(localGoals.length / itemsPerPage);
+  const paginatedGoals = localGoals.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   const RealisticFlame = ({ size = "w-6 h-6", dimmed = false }: { size?: string, dimmed?: boolean }) => (
     <div className={`relative ${size} flex items-center justify-center ${!dimmed ? 'animate-flame-flicker' : 'opacity-20 grayscale'}`}>
       {!dimmed && <div className="absolute inset-0 bg-orange-400 blur-sm opacity-30 rounded-full animate-pulse"></div>}
@@ -157,10 +181,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
     d.setDate(todayDateObj.getDate() - (6 - offset));
     return d.getDate();
   };
-
-  // Monthly Calendar Logic
-  const daysInMonth = 30; // Simulasyon
-  const myCourses = MOCK_COURSES.filter(c => c.studentIds.includes(currentUserId) || c.teacherId === currentUserId);
 
   return (
     <div className="w-full page-transition px-4 space-y-3 overflow-x-hidden pb-32 pt-2 transition-all text-slate-900 dark:text-slate-100 text-left">
@@ -203,7 +223,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       <section className="bg-slate-50 dark:bg-slate-900/30 p-3 rounded-[2rem] border border-slate-100 dark:border-slate-800/40 space-y-3">
         <div className="flex justify-between items-center px-1">
            <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">AKTİVİTE YOĞUNLUĞU</h3>
-           <button onClick={() => setActiveModal('activity')} className="text-[7px] font-black text-indigo-600 dark:text-indigo-400 uppercase bg-white dark:bg-slate-800 px-2.5 py-1 rounded-lg">Detay</button>
+           <button onClick={() => setActiveModal('activity')} className="text-[7px] font-black text-indigo-600 dark:text-indigo-400 uppercase bg-white dark:bg-slate-800 px-2.5 py-1 rounded-lg transition-transform active:scale-90">Detay</button>
         </div>
         <div className="flex justify-between gap-1.5 px-0.5">
           {[true, true, false, true, true, false, true].map((attended, i) => (
@@ -218,69 +238,116 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </section>
 
-      {/* HEDEFLERİM BÖLÜMÜ */}
+      {/* HEDEFLERİM BÖLÜMÜ (PAGINATED & COLLAPSIBLE) */}
       <section className="space-y-3">
         <div className="flex justify-between items-center px-1">
            <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-widest">HEDEFLERİM</h3>
            <button onClick={() => setActiveModal('goal-form')} className="text-[7px] font-black text-indigo-600 uppercase bg-slate-50 dark:bg-slate-800 px-3 py-1 rounded-lg">+ Yeni Hedef</button>
         </div>
-        <div className="space-y-3">
-          {localGoals.map(goal => {
+        
+        <div className="space-y-2">
+          {paginatedGoals.map(goal => {
             const progress = calculateProgress(goal.tasks);
+            const isExpanded = expandedGoalIds.includes(goal.id);
             return (
-              <div key={goal.id} className="bg-white dark:bg-slate-900 rounded-[2rem] p-5 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
-                <div className="flex justify-between items-start">
-                   <div className="space-y-1">
-                      <h4 className="text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight leading-none">{goal.title}</h4>
-                      <div className="flex items-center gap-2">
-                         <div className="h-1 w-24 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-indigo-500 transition-all duration-1000" style={{ width: `${progress}%` }}></div>
+              <div key={goal.id} className="bg-white dark:bg-slate-900 rounded-[1.5rem] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-all duration-300">
+                {/* Header (Click to Toggle) */}
+                <button 
+                  onClick={() => handleToggleGoalExpand(goal.id)}
+                  className="w-full p-4 flex items-center justify-between text-left group"
+                >
+                   <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-base shrink-0 ${goal.category === 'sport' ? 'bg-orange-50 text-orange-500' : 'bg-blue-50 text-blue-500'}`}>
+                         {goal.category === 'sport' ? '⚽' : goal.category === 'academic' ? '📚' : '🎯'}
+                      </div>
+                      <div className="min-w-0">
+                         <h4 className="text-[10px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight truncate">{goal.title}</h4>
+                         <div className="flex items-center gap-2 mt-1">
+                            <div className="h-1 w-16 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                               <div className="h-full bg-indigo-500 transition-all duration-500" style={{ width: `${progress}%` }}></div>
+                            </div>
+                            <span className="text-[6px] font-black text-indigo-600">%{progress}</span>
                          </div>
-                         <span className="text-[7px] font-black text-indigo-600">%{progress}</span>
                       </div>
                    </div>
-                   <div className={`p-2 rounded-xl text-lg ${goal.category === 'sport' ? 'bg-orange-50 text-orange-500' : 'bg-blue-50 text-blue-500'}`}>
-                      {goal.category === 'sport' ? '⚽' : '📚'}
+                   <div className={`w-6 h-6 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-300 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="6 9 12 15 18 9"/></svg>
                    </div>
-                </div>
+                </button>
 
-                <div className="space-y-2">
-                  {goal.tasks.map(task => (
-                    <button 
-                      key={task.id} 
-                      onClick={() => handleToggleTask(goal.id, task.id)}
-                      className="w-full flex items-center gap-3 group text-left"
-                    >
-                      <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${task.isCompleted ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800'}`}>
-                        {task.isCompleted && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><polyline points="20 6 9 17 4 12"/></svg>}
-                      </div>
-                      <span className={`text-[10px] font-bold flex-1 transition-all ${task.isCompleted ? 'text-slate-400 line-through' : 'text-slate-600 dark:text-slate-300'}`}>
-                        {task.text}
-                      </span>
-                    </button>
-                  ))}
-                  
-                  {/* Yeni Görev Girişi */}
-                  <div className="flex gap-2 pt-1">
-                    <input 
-                      type="text" 
-                      value={newTaskTexts[goal.id] || ''}
-                      onChange={(e) => setNewTaskTexts({ ...newTaskTexts, [goal.id]: e.target.value })}
-                      placeholder="Yeni görev ekle..."
-                      className="flex-1 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-xl px-3 py-2 text-[9px] font-bold outline-none"
-                    />
-                    <button 
-                      onClick={() => handleAddTask(goal.id)}
-                      className="w-9 h-9 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl flex items-center justify-center active:scale-90 transition-all"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 5v14M5 12h14"/></svg>
-                    </button>
+                {/* Collapsible Content */}
+                {isExpanded && (
+                  <div className="px-4 pb-4 space-y-3 animate-in slide-in-from-top-2 duration-300">
+                    <div className="space-y-1.5 pt-1">
+                      {goal.tasks.map(task => (
+                        <button 
+                          key={task.id} 
+                          onClick={() => handleToggleTask(goal.id, task.id)}
+                          className="w-full flex items-center gap-2.5 py-1 text-left group"
+                        >
+                          <div className={`w-4 h-4 rounded-md border-2 flex items-center justify-center transition-all shrink-0 ${task.isCompleted ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800'}`}>
+                            {task.isCompleted && <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="5"><polyline points="20 6 9 17 4 12"/></svg>}
+                          </div>
+                          <span className={`text-[9px] font-bold flex-1 transition-all ${task.isCompleted ? 'text-slate-300 line-through' : 'text-slate-600 dark:text-slate-300'}`}>
+                            {task.text}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                    
+                    {/* Add Task Input */}
+                    <div className="flex gap-2 pt-2 border-t border-slate-50 dark:border-slate-800">
+                      <input 
+                        type="text" 
+                        value={newTaskTexts[goal.id] || ''}
+                        onChange={(e) => setNewTaskTexts({ ...newTaskTexts, [goal.id]: e.target.value })}
+                        placeholder="Yeni görev..."
+                        className="flex-1 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-xl px-3 py-2 text-[8px] font-bold outline-none focus:border-indigo-300 transition-colors"
+                      />
+                      <button 
+                        onClick={() => handleAddTask(goal.id)}
+                        className="w-8 h-8 bg-indigo-600 text-white rounded-xl flex items-center justify-center active:scale-90 transition-all shadow-md"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><path d="M12 5v14M5 12h14"/></svg>
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             );
           })}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-4">
+            <button 
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => prev - 1)}
+              className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 disabled:opacity-30 active:scale-90 transition-all"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <div className="flex gap-1.5">
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button 
+                  key={i} 
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-6 h-6 rounded-lg text-[8px] font-black transition-all ${currentPage === i + 1 ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+            <button 
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 disabled:opacity-30 active:scale-90 transition-all"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        )}
       </section>
 
       {/* --- MODALLAR --- */}
@@ -292,24 +359,25 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="bg-white dark:bg-slate-900 w-full max-w-[360px] rounded-[3rem] p-7 relative z-10 shadow-2xl border border-slate-100 dark:border-slate-800 animate-in zoom-in-95">
              <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xs font-black uppercase tracking-widest leading-none">AYLIK AKTİVİTE</h3>
-                <button onClick={() => setActiveModal('none')} className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                <button onClick={() => setActiveModal('none')} className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl active:scale-90 transition-transform"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
              </div>
 
-             <div className="grid grid-cols-7 gap-2 text-center">
+             <div className="grid grid-cols-7 gap-2 text-center mb-2">
                 {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map(d => (
                   <span key={d} className="text-[7px] font-black text-slate-400 uppercase tracking-widest">{d}</span>
                 ))}
-                
-                {Array.from({ length: daysInMonth }).map((_, i) => {
+             </div>
+             
+             <div className="grid grid-cols-7 gap-2 text-center">
+                {Array.from({ length: 30 }).map((_, i) => {
                   const dayNum = i + 1;
-                  // Simulasyon: Bugün 15'i olsun. Kurs günlerini rastgele belirleyelim.
-                  const isPast = dayNum < 15;
                   const hasCourse = [2, 5, 9, 12, 16, 19, 23, 26].includes(dayNum);
                   const isAttended = hasCourse && (dayNum === 2 || dayNum === 9 || dayNum === 12);
+                  const isToday = dayNum === 15;
                   
                   return (
-                    <div key={i} className={`aspect-square rounded-2xl border flex flex-col items-center justify-center gap-1 transition-all ${isAttended ? 'bg-orange-50 dark:bg-orange-950/20 border-orange-100' : 'bg-slate-50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-800'}`}>
-                       <span className={`text-[8px] font-bold ${hasCourse ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400'}`}>{dayNum}</span>
+                    <div key={i} className={`aspect-square rounded-2xl border flex flex-col items-center justify-center gap-0.5 transition-all ${isAttended ? 'bg-orange-50 dark:bg-orange-950/20 border-orange-100 shadow-sm' : isToday ? 'border-indigo-600 bg-indigo-50/20' : 'bg-slate-50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-800'}`}>
+                       <span className={`text-[8px] font-black ${hasCourse ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400'} ${isToday ? 'text-indigo-600 font-black scale-110' : ''}`}>{dayNum}</span>
                        {hasCourse && <RealisticFlame size="w-3.5 h-3.5" dimmed={!isAttended} />}
                     </div>
                   );
@@ -318,7 +386,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
              <div className="mt-8 flex justify-center gap-4 text-[7px] font-black uppercase tracking-widest">
                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-orange-400 rounded-full shadow-[0_0_8px_rgba(249,115,22,0.4)]"></div><span>KATILDI</span></div>
-                <div className={`flex items-center gap-1.5 opacity-40`}><div className="w-2 h-2 bg-slate-400 rounded-full"></div><span>KATILMADI / GELECEK</span></div>
+                <div className={`flex items-center gap-1.5 opacity-40`}><div className="w-2 h-2 bg-slate-400 rounded-full"></div><span>GELECEK / YOK</span></div>
              </div>
           </div>
         </div>
@@ -339,10 +407,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                      value={newGoalTitle} 
                      onChange={(e) => setNewGoalTitle(e.target.value)}
                      placeholder="Örn: Hafta sonu maratonu" 
-                     className="w-full bg-slate-50 dark:bg-slate-800 px-4 py-3 rounded-2xl text-[10px] font-bold outline-none border border-slate-100 dark:border-slate-700" 
+                     className="w-full bg-slate-50 dark:bg-slate-800 px-4 py-3 rounded-2xl text-[10px] font-bold outline-none border border-slate-100 dark:border-slate-700 focus:border-indigo-400 transition-colors" 
                    />
                 </div>
-                <button type="submit" className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg mt-2">HEDEFİ OLUŞTUR</button>
+                <button type="submit" className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg mt-2 active:scale-95 transition-transform">HEDEFİ OLUŞTUR</button>
              </div>
           </form>
         </div>
@@ -363,8 +431,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-indigo-600 rounded-tl-3xl"></div>
                 <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-indigo-600 rounded-br-3xl"></div>
              </div>
-             <p className="text-[9px] font-medium text-slate-400 px-6 leading-relaxed mb-8 italic text-center">Tesis girişlerinde ve yoklamalarda bu QR kodu görevliye göstererek hızlıca işlem yapabilirsiniz.</p>
-             <button onClick={() => setIsQRModalOpen(false)} className="w-full py-4 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg">KAPAT</button>
+             <p className="text-[9px] font-medium text-slate-400 px-6 leading-relaxed mb-8 italic text-center">Girişlerde ve yoklamalarda bu QR kodu göstererek hızlıca işlem yapabilirsiniz.</p>
+             <button onClick={() => setIsQRModalOpen(false)} className="w-full py-4 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all">KAPAT</button>
           </div>
         </div>
       )}
@@ -382,7 +450,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                    </div>
                    <div className="text-left">
                       <h4 className="text-[11px] font-black uppercase tracking-widest leading-none">KREDİ KARTI</h4>
-                      <p className="text-[7px] text-white/60 font-bold mt-1 uppercase">Hemen Öde ve Onayla</p>
+                      <p className="text-[7px] text-white/60 font-bold mt-1 uppercase">Anında Onaylanır</p>
                    </div>
                 </button>
                 <button onClick={() => handlePaymentAction('Manual')} className="w-full p-5 bg-slate-50 dark:bg-slate-800 rounded-3xl text-slate-900 dark:text-white flex items-center gap-4 border border-slate-100 dark:border-slate-700 active:scale-95 transition-all">
@@ -390,8 +458,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 2v20m-5-17h10a4 4 0 1 1 0 8H7a4 4 0 1 0 0 8h10"/></svg>
                    </div>
                    <div className="text-left">
-                      <h4 className="text-[11px] font-black uppercase tracking-widest leading-none">MANUEL / HAVALE</h4>
-                      <p className="text-[7px] text-slate-400 font-bold mt-1 uppercase">Bildirim Gönder (Yönetici Onayı)</p>
+                      <h4 className="text-[11px] font-black uppercase tracking-widest leading-none">HAVALE / EFT</h4>
+                      <p className="text-[7px] text-slate-400 font-bold mt-1 uppercase">Yönetici Onayı Bekler</p>
                    </div>
                 </button>
              </div>
