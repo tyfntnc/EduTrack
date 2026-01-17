@@ -35,7 +35,7 @@ export const SYSTEM_BADGES: Badge[] = [
 export const MOCK_USERS: User[] = [
   { 
     id: 'admin', 
-    name: 'Zeynep Türk', 
+    name: 'Zeynep Sistem', 
     role: UserRole.SYSTEM_ADMIN, 
     email: 'admin@edutrack.com', 
     avatar: 'https://picsum.photos/seed/admin/200',
@@ -48,7 +48,7 @@ export const MOCK_USERS: User[] = [
     id: 'u4', 
     name: 'Canan Sert', 
     role: UserRole.SCHOOL_ADMIN, 
-    email: 'okulmuduru@okula.com', 
+    email: 'canan@okul-a.com', 
     schoolId: 'school-a', 
     avatar: 'https://picsum.photos/seed/u4/200',
     phoneNumber: '0555 444 55 66'
@@ -57,7 +57,7 @@ export const MOCK_USERS: User[] = [
     id: 'u1', 
     name: 'Ahmet Yılmaz', 
     role: UserRole.TEACHER, 
-    email: 'ogretmen@okula.com', 
+    email: 'ahmet@okul-a.com', 
     schoolId: 'school-a', 
     avatar: 'https://picsum.photos/seed/u1/200', 
     bio: '15 yıllık profesyonel futbol antrenörlüğü tecrübesi.',
@@ -68,7 +68,7 @@ export const MOCK_USERS: User[] = [
     id: 'u2', 
     name: 'Mehmet Kaya', 
     role: UserRole.STUDENT, 
-    email: 'ogrenci@okula.com', 
+    email: 'mehmet@okul-a.com', 
     schoolId: 'school-a', 
     avatar: 'https://picsum.photos/seed/u2/200', 
     parentIds: ['u3'], 
