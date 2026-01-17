@@ -38,7 +38,8 @@ export const Calendar: React.FC<CalendarProps> = ({ currentUser, onCourseClick, 
         title: c.title, 
         startTime: s.startTime, 
         type: 'regular', 
-        teacher: MOCK_USERS.find(u => u.id === c.teacherId)?.name.split(' ')[0] 
+        teacher: MOCK_USERS.find(u => u.id === c.teacherId)?.name.split(' ')[0],
+        role: undefined
       })));
       
     const ind = individualLessons.filter(l => l.date === dateStr).map(l => ({ 
@@ -46,7 +47,8 @@ export const Calendar: React.FC<CalendarProps> = ({ currentUser, onCourseClick, 
       title: l.title, 
       startTime: l.time, 
       type: 'individual', 
-      teacher: l.role === 'given' ? 'Siz (Eğitmen)' : 'Eğitmen' 
+      teacher: l.role === 'given' ? 'Siz (Eğitmen)' : 'Eğitmen',
+      role: l.role
     }));
     
     return [...regular, ...ind].sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -84,14 +86,34 @@ export const Calendar: React.FC<CalendarProps> = ({ currentUser, onCourseClick, 
         ) : (
           <div className="space-y-1.5">
             {activeSchedule.map((item, i) => (
-              <button key={i} onClick={() => onCourseClick(item.id)} className={`w-full p-3 rounded-[1.5rem] border flex items-center gap-3 active:scale-[0.98] transition-all shadow-sm ${item.type === 'individual' ? 'bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-200/50 dark:border-indigo-800/50' : 'bg-white/70 dark:bg-slate-900/40 border-white/20 dark:border-slate-800'}`}>
-                <div className={`px-2 py-1.5 rounded-xl text-[9px] font-black border ${item.type === 'individual' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-100 dark:border-slate-700'}`}>
+              <button 
+                key={i} 
+                onClick={() => onCourseClick(item.id)} 
+                className={`w-full p-3 rounded-[1.5rem] border flex items-center gap-3 active:scale-[0.98] transition-all shadow-sm ${
+                  item.type === 'individual' 
+                    ? item.role === 'given' 
+                      ? 'bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-200/50 dark:border-emerald-800/50'
+                      : 'bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-200/50 dark:border-indigo-800/50'
+                    : 'bg-white/70 dark:bg-slate-900/40 border-white/20 dark:border-slate-800'
+                }`}
+              >
+                <div className={`px-2 py-1.5 rounded-xl text-[9px] font-black border ${
+                  item.type === 'individual' 
+                    ? item.role === 'given'
+                      ? 'bg-emerald-600 text-white border-emerald-500'
+                      : 'bg-indigo-600 text-white border-indigo-500' 
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-100 dark:border-slate-700'
+                }`}>
                   {item.startTime}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h4 className="text-[9px] font-black text-slate-800 dark:text-slate-100 truncate uppercase tracking-tight leading-none mb-1">{item.title}</h4>
-                    {item.type === 'individual' && <span className="text-[6px] font-black bg-cyan-500 text-white px-1.5 py-0.5 rounded-md uppercase tracking-widest shrink-0">BİREYSEL</span>}
+                    {item.type === 'individual' && (
+                      <span className={`text-[6px] font-black text-white px-1.5 py-0.5 rounded-md uppercase tracking-widest shrink-0 ${item.role === 'given' ? 'bg-emerald-500' : 'bg-cyan-500'}`}>
+                        {item.role === 'given' ? 'VERİLEN' : 'ALINAN'}
+                      </span>
+                    )}
                   </div>
                   <p className="text-[6px] font-black text-slate-400 uppercase tracking-widest italic">{item.teacher}</p>
                 </div>
