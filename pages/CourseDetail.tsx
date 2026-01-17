@@ -70,20 +70,20 @@ export const CourseDetail: React.FC<CourseDetailProps> = ({
       <div className="px-5 py-6 space-y-6 text-left animate-in fade-in slide-in-from-bottom-4 duration-500">
         
         {/* --- GLASS EĞİTMEN KARTI --- */}
-        <section className="bg-white/70 dark:bg-indigo-900/10 backdrop-blur-md rounded-[2.5rem] p-5 border border-white/40 dark:border-indigo-500/10 shadow-[0_8px_32px_rgba(0,0,0,0.02)] flex items-center gap-4 transition-all hover:border-indigo-500/20">
-          <button 
-            className="w-16 h-16 rounded-[1.8rem] bg-white dark:bg-slate-800 shrink-0 overflow-hidden border-2 border-white dark:border-slate-800 shadow-sm"
-            onClick={() => teacher && onUserClick?.(teacher.id)}
-          >
+        <section 
+          onClick={() => teacher && onUserClick?.(teacher.id)}
+          className="bg-white/70 dark:bg-indigo-900/10 backdrop-blur-md rounded-[2.5rem] p-5 border border-white/40 dark:border-indigo-500/10 shadow-[0_8px_32px_rgba(0,0,0,0.02)] flex items-center gap-4 transition-all hover:border-indigo-500/20 active:scale-[0.98] cursor-pointer"
+        >
+          <div className="w-16 h-16 rounded-[1.8rem] bg-white dark:bg-slate-800 shrink-0 overflow-hidden border-2 border-white dark:border-slate-800 shadow-sm">
             <img src={teacher?.avatar || `https://ui-avatars.com/api/?name=${teacherName}`} className="w-full h-full object-cover" alt="" />
-          </button>
+          </div>
           <div className="flex-1 min-w-0">
              <div className="flex items-center gap-1.5 mb-1">
                 <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse"></div>
                 <span className="text-[7px] font-black text-indigo-500 uppercase tracking-widest">AKTİF EĞİTMEN</span>
              </div>
             <h3 className="text-[13px] font-black text-slate-900 dark:text-slate-100 leading-none truncate uppercase tracking-tight">{teacherName}</h3>
-            <p className="text-[8px] font-bold text-slate-400 mt-2 uppercase tracking-tighter italic">Profesyonel Kadro</p>
+            <p className="text-[8px] font-bold text-slate-400 mt-2 uppercase tracking-tighter italic">Profil Detayı İçin Dokun</p>
           </div>
         </section>
 

@@ -14,6 +14,7 @@ interface ProfileProps {
   actingUserId: string;
   allUsers: User[];
   onUserClick?: (userId: string) => void;
+  familyRoles?: Record<string, string>; // Aile bağları için özel roller
 }
 
 const Modal = ({ title, onClose, children }: { title: string, onClose: () => void, children?: React.ReactNode }) => (
@@ -33,12 +34,12 @@ const Modal = ({ title, onClose, children }: { title: string, onClose: () => voi
 
 export const Profile: React.FC<ProfileProps> = ({ 
   user, onBack, isOwnProfile = false, theme = 'lite', 
-  onThemeToggle, onLogout, currentUser, onSwitchUser, actingUserId, allUsers, onUserClick
+  onThemeToggle, onLogout, currentUser, onSwitchUser, actingUserId, allUsers, onUserClick,
+  familyRoles = {}
 }) => {
   const [activeModal, setActiveModal] = useState<'none' | 'edit' | 'security' | 'photo'>('none');
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Gözlem modu sadece Sistem Admin tarafından yapılabilir
   const isSystemAdmin = currentUser.role === UserRole.SYSTEM_ADMIN;
 
   const [formData, setFormData] = useState({ 
@@ -53,7 +54,6 @@ export const Profile: React.FC<ProfileProps> = ({
   
   const [tempAvatar, setTempAvatar] = useState(user.avatar || '');
 
-  // Aile üyelerini dinamik olarak bul
   const connectedUsers = allUsers.filter(u => {
     const isChild = user.childIds?.includes(u.id);
     const isParent = user.parentIds?.includes(u.id);
@@ -71,10 +71,8 @@ export const Profile: React.FC<ProfileProps> = ({
 
   const handleFamilyClick = (connected: User) => {
     if (isSystemAdmin) {
-      // Sadece Sistem Admin ise Gözlem Moduna (actingUserId değişimi) geç
       onSwitchUser?.(connected.id);
     } else {
-      // Diğer tüm kullanıcılar için sadece o bireyin profil detaylarını aç
       onUserClick?.(connected.id);
     }
   };
@@ -125,18 +123,21 @@ export const Profile: React.FC<ProfileProps> = ({
              <div className="grid grid-cols-2 gap-2">
               {connectedUsers.map((connected) => {
                 const isObserved = actingUserId === connected.id;
+                // EKLENEN ÖZELLİK: Özel rol varsa onu, yoksa sistem rolünü göster
+                const displayRole = familyRoles[connected.id] || connected.role;
+
                 return (
                   <button 
                     key={connected.id} 
                     onClick={() => handleFamilyClick(connected)} 
-                    className={`relative p-2.5 rounded-2xl border transition-all flex items-center gap-3 ${isObserved && isSystemAdmin ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 shadow-md ring-1 ring-indigo-500/10' : 'bg-white dark:bg-slate-900 border-slate-100 opacity-60'}`}
+                    className={`relative p-2.5 rounded-2xl border transition-all flex items-center gap-3 ${isObserved && isSystemAdmin ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 shadow-md ring-1 ring-indigo-500/10' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 opacity-60'}`}
                   >
-                    <div className="w-8 h-8 rounded-xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-800">
+                    <div className="w-8 h-8 rounded-xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-800 shadow-sm">
                       <img src={connected.avatar} className="w-full h-full object-cover" />
                     </div>
-                    <div className="text-left min-w-0">
+                    <div className="text-left min-w-0 flex-1">
                       <p className="text-[9px] font-black text-slate-800 dark:text-slate-100 truncate leading-none uppercase">{connected.name.split(' ')[0]}</p>
-                      <p className="text-[6px] font-bold text-indigo-500 uppercase tracking-tighter mt-1">{connected.role}</p>
+                      <p className="text-[7px] font-black text-indigo-500 uppercase tracking-tighter mt-1 truncate">{displayRole}</p>
                     </div>
                     {isObserved && isSystemAdmin && (
                        <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-500/50"></div>
@@ -151,7 +152,7 @@ export const Profile: React.FC<ProfileProps> = ({
         {isOwnProfile && (
           <section className="flex gap-2 mb-6">
             <button onClick={() => setActiveModal('edit')} className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121/3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
               <span className="text-[8px] font-black uppercase tracking-widest">Düzenle</span>
             </button>
             <button onClick={() => setActiveModal('security')} className="flex-1 py-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-all">
@@ -161,7 +162,7 @@ export const Profile: React.FC<ProfileProps> = ({
           </section>
         )}
 
-        <section className="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-[2rem] border border-slate-100 dark:border-slate-800 mb-6">
+        <section className="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-[2rem] border border-slate-100 dark:border-slate-800 mb-6 shadow-sm">
           <h3 className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">HAKKINDA</h3>
           <p className="text-[10px] font-medium text-slate-600 dark:text-slate-400 leading-tight italic">
             {user.bio || "EduTrack eğitim topluluğunun aktif bir üyesi."}
@@ -186,13 +187,13 @@ export const Profile: React.FC<ProfileProps> = ({
       {activeModal === 'photo' && (
         <Modal title="FOTOĞRAFI GÜNCELLE" onClose={() => setActiveModal('none')}>
           <div className="space-y-6 flex flex-col items-center">
-            <div className="w-28 h-28 rounded-[2.5rem] bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 overflow-hidden shadow-lg"><img src={tempAvatar} className="w-full h-full object-cover" /></div>
+            <div className="w-28 h-28 rounded-[2.5rem] bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 overflow-hidden shadow-lg transition-all"><img src={tempAvatar} className="w-full h-full object-cover" /></div>
             <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-            <button onClick={() => fileInputRef.current?.click()} className="w-full p-5 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl text-[9px] font-black text-slate-400 uppercase tracking-widest flex flex-col items-center gap-2">
+            <button onClick={() => fileInputRef.current?.click()} className="w-full p-5 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl text-[9px] font-black text-slate-400 uppercase tracking-widest flex flex-col items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
               YENİ DOSYA SEÇ
             </button>
-            <button onClick={() => { setActiveModal('none'); alert('Profil fotoğrafı güncellendi! ✅'); }} className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-[9px] uppercase tracking-widest shadow-lg">GÜNCELLEMEYİ KAYDET</button>
+            <button onClick={() => { setActiveModal('none'); alert('Profil fotoğrafı güncellendi! ✅'); }} className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-[9px] uppercase tracking-widest shadow-lg active:scale-95 transition-all">GÜNCELLEMEYİ KAYDET</button>
           </div>
         </Modal>
       )}
@@ -202,13 +203,13 @@ export const Profile: React.FC<ProfileProps> = ({
           <div className="space-y-4 pb-2 text-left">
              <div className="space-y-1.5">
                 <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest ml-1">AD SOYAD</label>
-                <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 rounded-2xl px-4 py-3 text-[11px] font-bold outline-none border border-slate-100 dark:border-slate-700" />
+                <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 rounded-2xl px-4 py-3 text-[11px] font-bold outline-none border border-slate-100 dark:border-slate-700 shadow-sm focus:ring-1 focus:ring-indigo-500 transition-all" />
              </div>
              <div className="space-y-1.5">
                 <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest ml-1">TELEFON</label>
-                <input type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 rounded-2xl px-4 py-3 text-[11px] font-bold outline-none border border-slate-100 dark:border-slate-700" />
+                <input type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 rounded-2xl px-4 py-3 text-[11px] font-bold outline-none border border-slate-100 dark:border-slate-700 shadow-sm focus:ring-1 focus:ring-indigo-500 transition-all" />
              </div>
-             <button onClick={() => { setActiveModal('none'); alert('Profil güncellendi! ✅'); }} className="w-full bg-indigo-600 text-white py-4 rounded-3xl font-black text-[10px] uppercase tracking-widest shadow-lg mt-2">DEĞİŞİKLİKLERİ KAYDET</button>
+             <button onClick={() => { setActiveModal('none'); alert('Profil güncellendi! ✅'); }} className="w-full bg-indigo-600 text-white py-4 rounded-3xl font-black text-[10px] uppercase tracking-widest shadow-lg mt-2 active:scale-95 transition-all">DEĞİŞİKLİKLERİ KAYDET</button>
           </div>
         </Modal>
       )}

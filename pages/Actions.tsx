@@ -12,12 +12,12 @@ export const Actions: React.FC<ActionsProps> = ({ currentUser, onActionClick }) 
 
   const quickActions = [
     { id: 'qr', label: 'QR Kod', icon: '📱', color: 'bg-indigo-500/10 text-indigo-500' },
-    { id: 'add_family', label: 'Aile Ekle', icon: '➕👨‍👩‍👦', color: 'bg-rose-500/10 text-rose-500' },
-    { id: 'delete_family', label: 'Aile Sil', icon: '➖👨‍👩‍👦', color: 'bg-slate-500/10 text-slate-500' },
+    { id: 'create_individual', label: 'Bireysel Eğitim', icon: '🎯', color: 'bg-cyan-500/10 text-cyan-500' },
+    { id: 'new_goal', label: 'Yeni Hedef', icon: '🚀', color: 'bg-blue-500/10 text-blue-500' },
+    { id: 'new_task', label: 'Yeni Görev', icon: '✅', color: 'bg-emerald-500/10 text-emerald-500' },
     { id: 'my_payments', label: 'Ödemelerim', icon: '🧾', color: 'bg-emerald-500/10 text-emerald-500' },
     { id: 'pay_dues', label: 'Aidat Öde', icon: '💰', color: 'bg-amber-500/10 text-amber-500' },
-    { id: 'create_individual', label: 'Bireysel', icon: '🎯', color: 'bg-cyan-500/10 text-cyan-500' },
-    { id: 'new_goal', label: 'Yeni Hedef', icon: '🚀', color: 'bg-blue-500/10 text-blue-500' },
+    { id: 'edit_family', label: 'Aile Düzenle', icon: '👨‍👩‍👦', color: 'bg-rose-500/10 text-rose-500' },
     { id: 'create_announcement', label: 'Duyuru', icon: '📢', color: 'bg-purple-500/10 text-purple-500' },
   ];
 
@@ -77,7 +77,6 @@ export const Actions: React.FC<ActionsProps> = ({ currentUser, onActionClick }) 
              </a>
           </div>
         </div>
-        <p className="text-[6px] font-bold text-slate-300 dark:text-slate-700 uppercase tracking-widest text-center mt-3">EduTrack Mobile Support v2.5</p>
       </section>
     </div>
   );
